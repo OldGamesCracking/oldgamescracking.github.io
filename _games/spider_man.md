@@ -13,7 +13,7 @@ tags:
 
 | Name | Spider-Man |
 | ------------- | ------------- |
-| Release | 2001 |
+| Release-Date | 2001 |
 | Redump ID | [38060](http://redump.org/disc/38060/) |
 | Protection | CD-Check |
 | Tested under | Win 10 |
@@ -38,7 +38,10 @@ xor al, al
 ret
 ```
 
-Well, that was it, the game should run without the CD now ;)
+Well, that was it, the game should run without the CD now ;)<br>
+
+
+* * *
 
 # Protection Details
 
