@@ -35,5 +35,6 @@ Please keep in mind that:
 * I will only have a look at games that are 20 years or older.
 * I will not upload any gamefiles or disc images.
 * I will not provide the cracked files.
+* I only crack games of which I own the physical copy at the time of writing.
 
 And always remember the ancient words: _"Support the software developers, if you like the game, buy it"_ - ideally from a local flea market ;)
