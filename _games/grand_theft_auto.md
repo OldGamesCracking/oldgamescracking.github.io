@@ -45,9 +45,11 @@ Well, that was easy :D<br><br>
 
 But wait, there is more. Did you realize that when you start the game now, the iconinc music is missing? That's because back in the days HDD space was limited so games often left large files like audio or video on the CD and loaded them dynamically when needed. For this game (and probably many others), the audio was stored as real CDDA audio tracks, which means you could put the game in a regular CD player and enjoy the cool soundtrack or rip it to MP3/Flac it with a CD-ripper. So a real full-blown NO-CD-Crack would be quite complicated to pull of, you would need to replace all the _AIL\_redbook_ functions in the game with some functions that load audio files from the gamefolder on your harddrive which is probably doable but beyond the scope of this writeup. Until then, simply create a virtual image of the disc or use the one from [archive.org](https://archive.org/details/GrandTheftAuto_201903) :)<br><br>
 
-With that in mind, it could also be an option to patch the _JE_ in line 00407394 to a _JMP_, that way you would end up with the best of both worlds: Have audio when the CD is inserted and still be able to play without a CD :)
+With that in mind, it could also be an option to patch the _JE_ in line 00407394 to a _JMP_, that way you would end up with the best of both worlds: Have audio when the CD is inserted and still be able to play without a CD :)<br><br>
 
-By the way, a while ago, Rockstar put the game for free on the net, so you can search for that ;)
+GTA London can be patched in the exact same manner, for my version of the game I just had to put a _JMP_ at 00436AC7.<br><br>
+
+By the way, a while ago, Rockstar put the game for free on the net, so you could also search for that instead ;)
 
 * * *
 
