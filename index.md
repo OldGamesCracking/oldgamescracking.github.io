@@ -8,4 +8,4 @@ layout: default
 
 ### Games:
 
-- [Spider-Man](/games/spider-man)
+- [Spider-Man](/games/spider_man)

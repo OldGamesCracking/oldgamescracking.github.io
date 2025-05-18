@@ -3,11 +3,11 @@ layout: default
 ---
 
 It's becoming harder and harder these days to play your good old games that you've collected over the years.
-One reason beeing game discs simply dying of (disc rot)[https://en.wikipedia.org/wiki/Disc_rot],
-others are modern operating systems that won't support old games, especially their copy protections schemes.\
+One reason beeing game discs simply dying of [disc rot](https://en.wikipedia.org/wiki/Disc_rot),
+others are modern operating systems that won't support old games, especially their copy protections schemes.<br>
 
-To tackle the first, I recommend dumping your old discs and verify them via the excellent project (redump)[http://redump.org/],\
-to address the second there are multiple ways:\
+To tackle the first, I recommend dumping your old discs and verify them via the excellent project [redump](http://redump.org/),<br>
+to address the second there are multiple ways:<br>
 
 * See if your game is available for a few bucks on GOG.com, they do a very good job in preverserving old games and making them playable on modern systems and prices are very fair.
 * Use any other platform to digitally download your game.
@@ -17,12 +17,12 @@ to address the second there are multiple ways:\
 * Write your very own Crack.
 
 For most peoply dumping the disc to preserve the original copy and/or acquiring a downloadable version is probably the best solution.
-But, as you might have already guessed, I'm interested in the last option: Writing a crack myself ;)\
+But, as you might have already guessed, I'm interested in the last option: Writing a crack myself ;)<br>
 
-_Why?_, you might ask. Well, there are many good reasons.\
-First, I'm interested in the techniques that we're used to protect the games from being copied and how cracking groups bypassed these protections.\
-Second, there are many games out there that are so obscure that you will not find it on GOG and you will have a hard time to find a No-CD-Crack without downloading a virus to your PC.\
-Last but not least, I always become a bit of a (Memberberry)[https://southpark.fandom.com/wiki/Memberberries] when I think back of the time when a new cracked game
+_Why?_, you might ask. Well, there are many good reasons.<br>
+First, I'm interested in the techniques that we're used to protect the games from being copied and how cracking groups bypassed these protections.<br>
+Second, there are many games out there that are so obscure that you will not find it on GOG and you will have a hard time to find a No-CD-Crack without downloading a virus to your PC.<br>
+Last but not least, I always become a bit of a [Memberberry](https://southpark.fandom.com/wiki/Memberberries) when I think back of the time when a new cracked game
 appeared on the net and was shared with your friends during a LAN party.
 Back then I was too young to fully understand what it takes to crack a game, but I always read the NFO that came with the game with joy end excitement,
 wondering if I would ever be capable to do what the 'cool kids' did.
