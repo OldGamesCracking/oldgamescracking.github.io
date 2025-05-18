@@ -11,14 +11,14 @@ tags:
 
 ## Game Specs
 
-|:-------------|:------------------|
+|-------------|------------------|
 | Name | Spider-Man |
 | Release | 2001 |
-| Redump ID | (38060)[http://redump.org/disc/38060/] |
+| Redump ID | [38060](http://redump.org/disc/38060/) |
 | Protection | CD-Check |
 | Tested under | Win 10 |
 | Scene-Crack by | ??? |
-|:-------------|:------------------|
+|-------------|------------------|
 
 # How to Crack
 
@@ -28,7 +28,7 @@ To crack it, open the _SpideyPC.exe_ in your favorite debugger (I use x86dbg) an
 
 ![CD-Check]({{site.url}}/assets/spider_man/cd_check.png)
 
-Now use the ages-old trick to locate the messagebox via 'Pause Debugger' + 'Run to user code' and then press the Ok button. You should break right after the messagebox. Look around, the check and the jump is right above:
+Now use the ages-old trick to locate the messagebox via 'Pause Debugger' + 'Run to user code' and then press the Ok button. You should break right after the messagebox. Look around, the check and the jump are right above:
 
 ![check]({{site.url}}/assets/spider_man/check.png)
 

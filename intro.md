@@ -6,7 +6,7 @@ It's becoming harder and harder these days to play your good old games that you'
 One reason beeing game discs simply dying of [disc rot](https://en.wikipedia.org/wiki/Disc_rot),
 others are modern operating systems that won't support old games, especially their copy protections schemes.<br>
 
-To tackle the first, I recommend dumping your old discs and verify them via the excellent project [redump](http://redump.org/),<br>
+To tackle the first, I recommend dumping your old discs and verify them via the excellent project [redump](http://redump.org/),
 to address the second there are multiple ways:<br>
 
 * See if your game is available for a few bucks on GOG.com, they do a very good job in preverserving old games and making them playable on modern systems and prices are very fair.
