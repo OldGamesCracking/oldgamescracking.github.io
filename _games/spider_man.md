@@ -11,14 +11,13 @@ tags:
 
 ## Game Specs
 
-|-------------|------------------|
 | Name | Spider-Man |
+| ------------- | ------------- |
 | Release | 2001 |
 | Redump ID | [38060](http://redump.org/disc/38060/) |
 | Protection | CD-Check |
 | Tested under | Win 10 |
 | Scene-Crack by | ??? |
-|-------------|------------------|
 
 # How to Crack
 
