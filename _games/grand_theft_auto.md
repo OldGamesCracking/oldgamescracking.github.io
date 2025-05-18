@@ -14,7 +14,7 @@ tags:
 | Name | Grand Theft Auto |
 | ------------- | ------------- |
 | Release-Date | 1997 |
-| Redump ID | [31971](http://redump.org/disc/38060/) |
+| Redump ID | [31971](http://redump.org/disc/31971/) |
 | Protection | CD-Check |
 | Tested under | Win 10 |
 | Scene-Crack by | [Acetate](https://archive.org/details/gta1_cdcrack) |
@@ -25,13 +25,13 @@ It's nice to see that this game still starts up after all these years (it's near
 
 As usual, start the game and you are greeted with a warning text:
 
-![CD-Check]({{site.url}}/assets/grand_theft_auto/cd_check.png)
+![CD-Check]({{site.url}}/assets/grand_theft_auto/no_cd.png)
 
 Ok, now that we know what we are dealing with, it's time to crack that thing ;)<br>
 
-Fire up your debugger (if you have one, ideally on the second screen) and let the game run in there up until the warning. Search for strings containing "warning" (maybe you need to play in english for that to work) and you should find this: 
+Fire up your debugger (ideally on the second screen) and let the game run until the warning. In the debugger, search for strings containing "warning" (maybe you need to play in english for that to work) and you should find this: 
 
-![CD-Check]({{site.url}}/assets/grand_theft_auto/cd_check.png)
+![CD-Check]({{site.url}}/assets/grand_theft_auto/warning.png)
 
 So, there are two jumps, a conditional and an unconditional. The conditional will jump based upon the value at 0x004BEDC0 (which I have already labeled with _cd\_check_). Search for all appearences of this value and you should find this place:
 
@@ -43,7 +43,7 @@ in the idata (initialized) section and is set to 1 right from the start. So open
 
 Well, that was easy :D<br><br>
 
-But wait, there is more. Did you realize that when you start the game now, the iconinc music is missing? That's because back in the days HDD space was limited so games often left large files like audio or video on the CD and loaded them dynamically when needed. For this game (and probably many others), the audio was stored as real CDDA audio tracks, which means you could put the game in a regular CD player and enjoy the cool soundtrack or rip it to MP3/Flac it with a CD-ripper. So a real full-blown NO-CD-Crack would be quite complicated to pull of, you would need to replace all the _AIL\_redbook_ functions in the game with some functions that load audio files from the gamefolder on your harddrive which is probably doable but beyond the scope of this writeup. Until then, simply create a virtual image of the disc or use the one from [archive.org](https://archive.org/details/GrandTheftAuto_201903) :)<br><br>
+But wait, there is more. Did you realize that when you start the game now, the iconinc music is missing? That's because back in the days HDD space was limited so games often left large files like audio or video on the CD and loaded them dynamically when needed. For this game (and probably many others), the audio was stored as real CDDA audio tracks, which means you could put the game in a regular CD player and enjoy the cool soundtrack or rip it to MP3/Flac with a CD-ripper. So a real full-blown NO-CD-Crack would be quite complicated to pull off, you would need to replace all the _AIL\_redbook_ functions in the game with some functions that load audio files from the gamefolder on your harddrive which is probably doable but beyond the scope of this writeup. Until then, simply create a virtual image of the disc or use the one from [archive.org](https://archive.org/details/GrandTheftAuto_201903) :)<br><br>
 
 With that in mind, it could also be an option to patch the _JE_ in line 00407394 to a _JMP_, that way you would end up with the best of both worlds: Have audio when the CD is inserted and still be able to play without a CD :)<br><br>
 
