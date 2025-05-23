@@ -27,7 +27,7 @@ tags:
 
 ### Prologue
 
-This article got quite long and I still haven't figured out all the details on how SecuROm works in it's core, but I guess I have already found out many details and will come back in one of the next articles to perform a deep dive on all aspects. 
+This article got quite long and I still haven't figured out all the details on how SecuROm works in it's core, but I guess I have already found out many details and will maybe come back in one of the next articles to perform a deep dive on all aspects. 
 
 # How to Crack (a journey)
 
@@ -37,7 +37,9 @@ By the way, you can get it on GOG.com, Steam and [archive.org](https://archive.o
 
 The game won't run properly on my Win 10 machine, but at least I can get to the main menu with the CD inserted and without it gives me an error message, so I guess that's enough to crack it ;)<br>
 
-As always, start by loading the _hexplore.exe_ in x32dbg and try to find the error message and then work our way back. By the way, you should disable ScyllaHide or it will spoil the fun ;) For the start, pass all exceptions to the game and place a breakpoint on _MessageBoxA_ via _'bp MessageBoxA'_. You should find the CALL at 00433B76. If you put a software breakpoint directly on the call, the game will hang which is probably a sign that an integrity-check or a debug-check is taking place somewhere. To understand the protection a bit better, remove the software breakpoint and place a hardware breakpoint 'on access' at 00433B76 and hit F9.<br><br>
+![No disc]({{site.url}}/assets/hexplore/no_disc.png)
+
+As always, start by loading the _hexplore.exe_ in x32dbg and try to find the error message and then work your way back. By the way, you should disable ScyllaHide or it will spoil the fun ;) For the start, pass all exceptions to the game and place a breakpoint on _MessageBoxA_ via _'bp MessageBoxA'_. You should find the CALL at 00433B76. If you put a software breakpoint directly on the call, the game will hang which is probably a sign that an integrity-check or a debug-check is taking place somewhere. To understand the protection a bit better, remove the software breakpoint and place a hardware breakpoint 'on access' at 00433B76 and hit F9.<br><br>
 
 Aaaand we break ... somewhere 🤔
 
@@ -51,7 +53,7 @@ xor byte ptr ss:[ebp-0x01], 0x01
 popf
 ```
 
-The classic trick to generate a _SINGLE\_STEP_ (0x80000004) exception. Place a breakpoint on the _pushf_, restart the program, run until the BP and have a look at the installed SEH handlers. There should be two. The one we are interested in starts at 00433010. So put a BP there, hit F9 and let the exception happen so we land in the SEH. A few single steps down the line and we can reconstruct the handler to something like this:
+The classic trick to generate a _SINGLE\_STEP_ (0x80000004) exception. Place a breakpoint on the _pushf_, restart the program, run until the BP and have a look at the installed SEH handlers. There should be two. The one we are interested in starts at 00433010. So put a BP there, hit F9 and let the exception happen so we land in the SEH handler. A few single steps down the line and we can reconstruct the handler to something like this:
 
 ```c
 EXCEPTION_DISPOSITION seh_handler(
@@ -80,9 +82,11 @@ EXCEPTION_DISPOSITION seh_handler(
 ```
 
 Which will kill all our hardware breakpoints except the first one, which is set 3 bytes after where the exception occured (which is in the middle of the CALL?!?). Moreover the Trap flag is set again so it will immeadeately call the SEH handler again. And also the location where Eip points to is checked for an INT3 breakpoint. There are some flags that are set/cleared (0x590D74, 0x590D70, 0x591240, 0x5911D0, 0x590DB0) which I could not figure out immeadeately. To get a better understanding, place a BP on all occurrences of these flags and restart the program.<br>
-The first time, we break at 004356D0 where 0x5911D0 is set to some location (004361B4) which looks like a function that just returns zero, so this might be a function pointer. 0x591240 is set to 0x4338B0 one line below. 0x4338B0 is the start of some routine, so it's probably also some function pointer. At 004356ff it's set to the section base. At address 004357A0 the value at 0x590D74 is set to 1 (true). This does not make much sense yet so restart the program and let's have a fresh look at the SEH. This time we have a closer look at the variables and make some guesses:
+The first time, we break at 004356D0 where 0x5911D0 is set to some location (004361B4) which looks like a function that just returns zero, so this might be a function pointer. 0x591240 is set to 0x4338B0 one line below. 0x4338B0 is the start of some routine, so it's probably also some function pointer. At 004356ff it's set to the section base. At address 004357A0 the value at 0x590D74 is set to 1 (true). This does not make much sense yet so restart the program and let's have a fresh look at the SEH. This time we have a closer look at the variables and make some guesses:<br>
 
 ```c
+// Note: I did not came up with this right from the start, I went over it multiple times and made smaller changes every time.
+
 EXCEPTION_DISPOSITION seh_handler(
     PEXCEPTION_RECORD ExceptionRecord,
     PVOID             EstablisherFrame,
@@ -96,7 +100,7 @@ EXCEPTION_DISPOSITION seh_handler(
             // later ;)
         }
         
-        case (STATUS_SINGLE_STEP)
+        case (STATUS_SINGLE_STEP):
         {
             if ((ContextRecord->Dr6 & 0x0f) != 0)
             {
@@ -240,7 +244,7 @@ BOOL C32(BOOL init)
 Next we have a CALL to _TC32_ at 00435CA0 which I can not make much sens of right now, my best guess would be that it initializes some keys, but we will see that probably later.<br><br>
 
 Right after that we have a call with two parameters. You will realize that this is just good old _strcpy_ but the first time it is called, no strings are passed so it's hard to see at the moment.
-Then follows a CALL to _GGDM32_ (alias for _C32_) which is probably a leftover and probably means something like "Get Global DOS Memory" and finally the first real interesting function: _GNOCD32_.
+Then follows a CALL to _GGDM32_ (alias for _C32_) which is probably a leftover and probably means something like "Get Global DOS Memory" (judging by the error message) and finally the first real interesting function: _GNOCD32_.
 
 ```c
 /// <summary>
@@ -417,7 +421,7 @@ BOOL INQ32(DWORD letter, DWORD *unknown, HANDLE hDrive)
 }
 ```
 
-Strangely the command does not work and the return value seems unused anyways<br><br>
+Strangely the command does not work but the return value seems not to be unused anyways.<br><br>
 
 Time for the next function: _RLOS32_:
 
@@ -524,7 +528,7 @@ BOOL RLOS32(DWORD letter, DWORD sector, BYTE *buffer, BOOL rawData, HANDLE hDriv
 
 RLOS32 reads sector 16 of the CD where the Primary Volume Descriptor (PVD) sits. It then compares the Volume Identifier with the string we decrypted earlier ("Hexplore"). If it matches, another flag is set in the value at 0x00590DB8: 0x00002000 (I called it CHECK_DISC_NAME_MATCHES).<br>
 
-A few instructions down the raod the flags are checked and if they are ok, we land on the next function _ADI32_:
+A few instructions down the road the flags are checked and if they are ok, we land on the next function _ADI32_:
 
 ```c
 /// <summary>
@@ -623,7 +627,7 @@ for (int i = 0; i < 4; i++)
 }
 ```
 
-So, basically it takes 4 sector-addresses (as I found out later) and increments each address six times by some random value. But what is integrity_check? This value is generated in the SEH handler and is based upon the instructions it passes by. So if anything went slightly unexpected since the last _reset_integrity_check_ (at 00433C28), the values are all messed up.<br>
+So, basically it takes 4 sector-addresses (as I found out later) and increments each address six times by some random value. But what is integrity_check? This value is generated in the SEH handler and is based upon the instructions we have passes by so far. So if anything went slightly unexpected since the last _reset_integrity_check_ (at 00433C28), the values are all messed up.<br>
 Ok, now it got me thinking. Normally the exact values are not of our concern since we could just break after the routine and just look in the memory at 0x58D4C0, but I got curious what the actual offsets are :) So we need to find a way to stop the SEH at the right time so it can tell us the exact value of "i + (uint)integrity_check - (uint)bVar5". This exact moment is at address 00433CF7. So let's try to write a small debugger script that will do exactly that:
 
 ```asm
@@ -679,11 +683,11 @@ We get the following output:
 
 So it looks like they managed to construct the values in the lookup so that always 6 consecutive bytes are read from the table.<br>
 
-For those of you who are playing along at home, this is the result:
+For those of you who are playing along at home, this is the final result (24 sector addresses):
 
 ![Sectors]({{site.url}}/assets/hexplore/sectors.png)
 
-But, what are these values? We'll see later let's first have a look at _LD32_ down the line:
+But, what are these addresses? We'll see later let's first have a look at _LD32_ down the line:
 
 ```c
 /// <summary>
@@ -805,7 +809,7 @@ BOOL STS32(DWORD letter, DWORD sector, HANDLE hDrive)
 }
 ```
 
-So, step out of the function, step over some _memcpy_ and a _CloseHandle_ (closes the raw drive access) and we land on this bit:
+Back on topic... Step out of the function (the one starting at 00433C10, if you've lost track where we are), step over some _memcpy_ and a _CloseHandle_ (closes the raw drive access) and we land on this bit:
 
 ```c
 mov eax, 0x42BDE0
@@ -848,18 +852,22 @@ case (STATUS_ACCESS_VIOLATION):
 
 Or in other words, EAX is filled with a new value and the instruction is repeated again.<br><br>
 
-Ok, back on topic. We are nearly there. We finally land at the exit function, this time with 0x2c as parameter. As I sais, there is not much going, mostly cleanup stuff etc. But for the first time, we exit normally, without a messagebox :) Instead we JMP, POP, JMP aaaand we are there :D<br><br>
+Ok, back on topic. We are nearly there. We finally land at the exit function, this time with 0x2c as parameter. As I said, there is not much going, mostly cleanup stuff etc. But for the first time, we exit normally, without a messagebox :) Instead we JMP, POP, JMP aaaand we are there :D<br><br>
 
 WOW! What a journey. You can now dump the game with Scylla (use the normal result, not the advanced one: VA: 00595250, Size: 000001BC), get a bunch of errors and after some digging you find out, that Microsoft has replaced some of the original functions with some place-ins to increase compatibility but decrease debugability :)<br>
-I fixed them manually, removed the CD, started the dumped exe and was greeted with one last enemy:
+I fixed them manually by having a look at the addresses. Sometimes you can already see Debug Strings with the name of the function, sometimes you need to set the EIP to the import manually and step in a but, most of the time the name pops up somewhere quite fast.
+
+![Last Stand]({{site.url}}/assets/hexplore/cd_check.png)
+
+After all is fixed and dumped, remove the CD, start the dumped exe and you are greeted with one last enemy:
 
 ![Last Stand]({{site.url}}/assets/hexplore/cd_check.png)
 
 I leave that to you to figure this out, it's really easy ;)<br><br>
 
-But wait a minute, there is one last thing that comes to my mind. What did we do last? _JMP EAX_ ?
+But wait a minute, there is one last thing that comes to my mind. What was the last instruction? _JMP EAX_ ?
 
-![JMP]({{site.url}}/assets/hexplore/jmp.png)
+![JMP]({{site.url}}/assets/hexplore/jmp.jpg)
 
 Oh, come on! They did not encrypt that part? So all we had to do was:
 
