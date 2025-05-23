@@ -857,7 +857,7 @@ Ok, back on topic. We are nearly there. We finally land at the exit function, th
 WOW! What a journey. You can now dump the game with Scylla (use the normal result, not the advanced one: VA: 00595250, Size: 000001BC), get a bunch of errors and after some digging you find out, that Microsoft has replaced some of the original functions with some place-ins to increase compatibility but decrease debugability :)<br>
 I fixed them manually by having a look at the addresses. Sometimes you can already see Debug Strings with the name of the function, sometimes you need to set the EIP to the import manually and step in a but, most of the time the name pops up somewhere quite fast.
 
-![Last Stand]({{site.url}}/assets/hexplore/cd_check.png)
+![Fixing IAT]({{site.url}}/assets/hexplore/imports.png)
 
 After all is fixed and dumped, remove the CD, start the dumped exe and you are greeted with one last enemy:
 
