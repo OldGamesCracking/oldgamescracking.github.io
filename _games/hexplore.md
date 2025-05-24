@@ -18,7 +18,7 @@ tags:
 | Redump ID | [35457](http://redump.org/disc/35457/) |
 | Protection | SecuROM (Version unknown, probably v1) |
 | Tested under | Win 10 |
-| Scene-Crack by | ??? |
+| Scene-Crack by | Laxity |
 
 *Needed Tools:*
 
@@ -85,7 +85,8 @@ Which will kill all our hardware breakpoints except the first one, which is set 
 The first time, we break at 004356D0 where 0x5911D0 is set to some location (004361B4) which looks like a function that just returns zero, so this might be a function pointer. 0x591240 is set to 0x4338B0 one line below. 0x4338B0 is the start of some routine, so it's probably also some function pointer. At 004356ff it's set to the section base. At address 004357A0 the value at 0x590D74 is set to 1 (true). This does not make much sense yet so restart the program and let's have a fresh look at the SEH. This time we have a closer look at the variables and make some guesses:<br>
 
 ```c
-// Note: I did not came up with this right from the start, I went over it multiple times and made smaller changes every time.
+// Note: I did not came up with this right from the start
+// I went over it multiple times and made smaller changes every time
 
 EXCEPTION_DISPOSITION seh_handler(
     PEXCEPTION_RECORD ExceptionRecord,
