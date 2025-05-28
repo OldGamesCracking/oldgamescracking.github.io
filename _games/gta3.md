@@ -27,10 +27,10 @@ tags:
 - Good Old PC (Windows XP)
 - x32dbg
 - ProcMon 3.1 (Win XP compatible)
+- PE tool of your choice (e.g. PE-bear)
 - Gimp :)
 - The original Game-CD of course ;)
 - Lots of sleepless nights
-
 - [Luca D'Amico](https://www.lucadamico.dev/) whote wrote a nice [Paper](https://www.lucadamico.dev/papers/drms/securom/ArabianNights.pdf) on the topic which I partly used as inspiration.
 
 ### Disclaimer
@@ -49,9 +49,9 @@ As always, open the Game in x32dbg (disable ScyllaHide and pass all exceptions) 
 
 If we are lucky, they did not change the detection scheme. So let's try the script from last time:
 
+```asm
 ; Start script at ep
 
-```asm
 bpd
 bphc
 
@@ -90,7 +90,7 @@ So the script hides the debugger from PEB-checking and checks to NtQueryInformat
 
 The disc spins up it does some readings and after about 10 seconds, we break in _ResumeThread_ which is kinda unexpected since that means that the Game process is already up and running.<br>
 
-By snooping around a bit, I discovered, that there does not seem to be an ICD file anymore and also some strange temporary files are created. I guess it's time for Process Monitor (Procmon). The current version does not seem to work under Win XP but version 3.1 seems to work well enough. I played a bit with the filters to reduce the noise and then it started to give a clearer image:
+By snooping around a bit, I discovered, that there does not seem to be an ICD file anymore (ICD = encrypted game in separete file) and also some strange temporary files are created. I guess it's time for Process Monitor (Procmon). The current version does not seem to work under Win XP but version 3.1 seems to work well enough. I played a bit with the filters to reduce the noise and then it started to give a clearer image:
 
 ![Temp File]({{site.url}}/assets/gta3/temp_file.png)
 
@@ -122,7 +122,7 @@ The first 28 bytes from _00000001.TMP_ are read and a threat is created. Then th
 
 So, this in theory means that we never left _gta3.exe_ like we did with SafeDisc v1 and no new process was created. This means that the OEP must be somewhere in the current process. Time to figure out where. So we need what I call an 'anchor' - a known location that will at least tell us that we are past the loader and within the game code. If the anchor stops execution we don't know how far we are in the code, but at least we get a feeling of where the OEP might be.<br>
 
-So as a first rough start, let's use the famous _gta3.img_ and break once we have a _CreateFile_ containing that location. For that we can use the script from GTA 2 and just change the name and function. But I was having a hard time and I did not break. After a few minutes of struggling and thinking I thought I solved the first part of the problem: stupid wide-char strings :D So we need to use CreateFileW. But then again, I could not break on _gta.img_, although _peds.col_ (the second file that is loaded) worked find and in contrast the file is also opened via _CreateFileA_, so where is _gta3.img_ !?! So far, I have no freakin idea :D Let's use ped.col then. (As it later turned out - at least that's what I think, ProcMon shows the real filenames on disc not the strings that were passed to CreateFile. So if the program requests GTA3.IMG (uppercase), ProcMon still shows the name from disc - hence gta3.img I think I could have used _stristr_ to solve that issue).
+So as a first rough start, let's use the famous _gta3.img_ and break once we have a _CreateFile_ containing that location. For that we can use the script from GTA 2 and just change the name and function. But I was having a hard time and it did not break. After a few minutes of struggling and thinking I thought I solved the first part of the problem: stupid wide-char strings :D So we need to use CreateFileW. But then again, I could not break on _gta.img_, although _peds.col_ (the second file that is loaded) worked fine and in contrast the file is also opened via _CreateFileA_, so where is _gta3.img_ !?! So far, I have no freakin idea :D Let's use ped.col then. (As it later turned out - at least that's what I think, ProcMon shows the real filenames on disc not the strings that were passed to CreateFile. So if the program requests GTA3.IMG (uppercase), ProcMon still shows the name from disc - hence gta3.img. I think I could have used _stristr_ to solve that issue).
 
 ```asm
 bpc
@@ -195,24 +195,24 @@ Restart and - booom :) We are there ;)<br>
 
 Well, that was kinda easy. Time for the fun part: fixing the IAT.<br><br>
 
-By the way, you can make a snapshot of the VM now so you can save on the time that the loader needs to load the data from the CD and also spare your drive from this jittery SafeDisc thing and you could also remove the CD now at least for fixing the IAT. Thanks to Luca D'Amico / Antelox for that trick.<br>
+By the way, you can make a snapshot of the VM now so you can save on the time that the loader needs to load the data from the CD and also spare your drive from this jittery SafeDisc thing and you could also remove the CD now, at least for fixing the IAT. Thanks to Luca D'Amico / Antelox for that trick.<br>
 
 Ok, let's have a closer look at the imports. In the image above we can already see a remote call. Step into that call and we see the following code:
 
 ![Call]({{site.url}}/assets/gta3/call.png)
 
-Not exactly the same as SafeDisc 1 but kinda similar. If you try to step over the call, bad things happen. There are probably timing checks in there and the return address is probably checked for a 0xCC to detect a snoopy cracker ;) ... at least that's what I thought first, but it turns out that the problem is that the game actually crashes later down the line and the we simply do not land on the code after the CALL (address 0019992D0 in the image). In order to figure out the actual remote call address, this is what I did:
+Not exactly the same as SafeDisc 1 but kinda similar. If you try to step over the call, bad things happen. There are probably timing checks in there and the return address is probably checked for a 0xCC to detect a snoopy cracker ;) ... at least that's what I thought first, but it turns out that the problem is that the CALL actually never returned where I thought it would (address 0019992D0 in the image), all this "popad, popfd" was probably only added to confuse us, this code is never reached. In order to figure out the actual remote call address and how we return, this is what I did:
 
 I single stepped past the _pushfd_ and placed a hardware breakpoint on the top of the stack. Then hit F9 and landed here:
 
 ![At return]({{site.url}}/assets/gta3/ret.png)
 
-See how the function that we actually tried to call is on the stack? If we now return, we land in that function. Ok, this seems repairable:
+See how the address of the procedure that we actually tried to call is on the stack? If we return now, we land in that procedure. And the original return address is also there. Ok, this seems repairable:
 
-- Go through IAT and check for CALLs to locations that are not in user sections (I used < 0x21100000)
-- Place a HW BP on the stack once the first value is pushed
-- Run and then the BP will trigger two simes (the first time is when the function address is written)
-- We should be in the function and can retrieve its address 
+- Go through the IAT and check for addresses that are in user sections (I used < 0x21100000)
+- Place a HW BP 'on access' on the stack once the first value is pushed in the stub
+- Run freely and then the BP will trigger two times (the first time is when the function address is written)
+- We should be in the procedure and can retrieve its address 
 
 ```asm
 $iat_start = 0x0061D3B4
@@ -276,11 +276,11 @@ end:
 
 This works well and the imports are all fixed, but once we start the game, it crashes. I tried to track down the cause and realized that some imports were different to the original. So it looks like we either tripped a tripwire and SafeDisc will mess up the imports if we call them out of order or there is some setup going on that we miss. Let's check. The particular CALL that is messed up is the one at 0x005C85B8. Normally it should call _InitializeCriticalSection_ but it was resolved to _WriteFile_ by the script.<br>
 
-In order to address the issue, I modified the script to only resolve that function (not the whole IAT) and it also returned _WriteFile_ so it looks like we miss some setup. Maybe SafeDisc expects us to call one particular function first. Lets see. After some minutes of poking in the dark and testing different things I found out that the return address on the stack seems to play an important role. Well, that means we need to find a corresponding CALL for every freakin' import... ooouf!<br>
+In order to address the issue, I modified the script to only resolve that function (not the whole IAT) and it also returned _WriteFile_, so it looks like the order is not important, but we might miss some setup step. Maybe SafeDisc expects us to call one particular function first that they injected in the game code. After some minutes of poking in the dark and testing different things I found out that the return address on the stack seems to play an important role. Well, that means we need to find a corresponding CALL for every freakin' thunk... ooouf!<br>
 
 Let's try if we can pull that off with a script...<br>
 
-- Go through the IAT and select the addresses that go to a stub
+- Go through the IAT and select the addresses that go to a stub (idientified via the address)
 - Find a CALL to that stub via a searchpattern
 - Push the return address of that CALL on the stack
 - Modify EIP to point to the stub
@@ -289,14 +289,15 @@ Let's try if we can pull that off with a script...<br>
 - Cleanup. Done ;) 
 
 During the writing of the script I realized that the calls are not unique. Multiple CALLs seem to share the same stub but end up in a different remote procedure. The only common thing is the call to the function at 0x10057CE0 which I have called 'Resolver' and which we will see again later ;)<br>
-The Resolver is one hell of a mess and I tried to reverse it but gave up since there are tripwires everywhere and the control flow is fucked up, also the tripwires are silent so sometimes you just end up in a valid but different remote procedure. That meant that I fully blackboxed it.<br>
+The Resolver is one hell of a mess and I tried to reverse it but gave up since there are tripwires everywhere and the control flow is fucked up, also the tripwires are silent so sometimes you just end up in a valid but different remote procedure. At one point I decided to just blackbox it.<br>
 That makes things slightly more complicated :( Looks like we also have to patch the CALLs itself to point to the right thunk in order to prevent collisions. But the problem is, where do we put the collided thunks? Well, my first approach was to simply use the empty thunks and hope for the best ;)<br>
 
 ![Call Stub]({{site.url}}/assets/gta3/call_stub.png)
 
-So in order to make that happen, we need to modify the script that it will find all CALLs to a given thunk not just a single one.<br>
+So in order to make that happen, we need to modify the script so that it will find all CALLs associated with a given thunk not just a single one.<br>
 
 The script ran fine up to a certain point and the imports were restored but from time to time the game crashed completely or exited while the script was still running. I spent a fair amount of time tracking down the cause and I still don't know the real cause but while searching for similarities amongst the imoprts that were crashing, I discovered, that every crashing import had a CALL that was directly located below a _RET_.<br>
+Either they are fake-Calls that deliberately crash upon using the Resolver on them, probably placed in the empty space that some linkers leave between compilation units, or they serve internal purposes to SafeDisc. Or maybe these were once some kind of Unit-Testing thingies or some guards or whatever but the underlaying library was removed so the Resolver is unable to find the proc addresses... who knows, I did not dig deeper into that.
 
 ![Broken Call]({{site.url}}/assets/gta3/broken_call.PNG)
 
@@ -454,29 +455,29 @@ A JMP to some quite far away portion of the memory, the code there looks somethi
 
 ![Import]({{site.url}}/assets/gta3/import.png)
 
-So basically it first retrieves EIP via the CALL to the next line and then gets the address of a stub and places it on the stack to jump there via a return. The import stub looks just like we know it:
+So basically it first retrieves EIP via the CALL to the next line and then gets the address of a stub and places it on the stack to jump there via a return. The stub looks just like we know it:
 
 ![Import Stub]({{site.url}}/assets/gta3/stub.png)
 
-It only has an additional return address in front of it. So this is some kind of jump pad code that ends up in a stub and finally in the Resolver:
+It's like the other stubs, just with an additional return address in front of it. So this is some kind of jump pad code that ends up in a stub and finally in the Resolver:
 
 ![Jump Pad]({{site.url}}/assets/gta3/jumppad.png)
 
-It looks like the stub is for one specific place in the code. That makes things easier this time.<br>
+It looks like the stub is for one specific JMP in the code. That makes things easier this time.<br>
 So how does the script look like?<br>
 
 - Find the extended stub (stub with return address) via a searchpattern
 - Subtract 6 from the return address to get the original jump location
-- Maybe do a sanity check if there really is a JMP
+- Maybe do a sanity check, to see if there really is a JMP
 - Get the address of the remote procedure just as before
 - Get the slot in the IAT just as before
 - Replace the JMP with a CALL
 
 That was rather straight forward and worked without any hassle. Time to start the game... and it crashed. Dammit! What's the cause this time?<br>
 
-Turns out, SafeDisc has a third Ace up it's sleeve: The _Jump Pad driven byte-stealing, self-aware stub_ :D<br>
+Turns out, SafeDisc has a third Ace up it's sleeve: The *_Jump Pad Driven, Byte-Stealing, Self-Aware Stub_* (JPDBSSAS) :D<br>
 This one took nearly four days to solve and is the most whacky/hacky part of the script, also because x32dbg has - at the time of the writing - some bugs I had to maneuver around, but well, it gets the job done ;)<br>
-Enough talk, lets see some code. The part that was crashing on me :<br>
+Enough talk, let's see some code.<br>
 
 At - for example - 0x0048C0BD you find a call to a routine that looks like the following:
 
@@ -486,7 +487,7 @@ This is a tiny jump pad that will just put an address on the stack and jump ther
 
 ![Resolver 2]({{site.url}}/assets/gta3/byte_stealer.png)
 
-This looks and behaves pretty much as the Resolver before, only that I got quite confused on to where it will resolve to. It turned out, that it resolves to the address of the initial CALL from the user code, where the jump pad is but it had altered (decrypted) the code so that the jump pad was replaced with the real function code now (compare the addresses):
+This looks and behaves pretty much as the Resolver before, only that I got quite confused on to where it will resolve to. It turned out, that it resolves to the address of the initial CALL from the user code, where the jump pad is but it had altered (decrypted) the code so that the jump pad was replaced with the real code now (compare the addresses):
 
 ![Real Code]({{site.url}}/assets/gta3/real_code.png)
 
