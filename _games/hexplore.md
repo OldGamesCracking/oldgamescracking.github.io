@@ -25,6 +25,12 @@ tags:
 - x32dbg
 - (Ghidra)
 
+### Disclaimer
+
+- The games are cracked for educational purpose and to regain compatibility with modern systems
+- The games are more than 20 years old and can be found freely on the net via e.g. archive.org
+- No parts of the game are distributed
+
 ### Prologue
 
 This article got quite long and I still haven't figured out all the details on how SecuROm works in it's core, but I guess I have already found out many details and will maybe come back in one of the next articles to perform a deep dive on all aspects. 

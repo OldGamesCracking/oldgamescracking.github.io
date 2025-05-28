@@ -19,6 +19,12 @@ tags:
 | Tested under | Win 10 |
 | Scene-Crack by | [Acetate](https://archive.org/details/gta1_cdcrack) |
 
+### Disclaimer
+
+- The games are cracked for educational purpose and to regain compatibility with modern systems
+- The games are more than 20 years old and can be found freely on the net via e.g. archive.org
+- No parts of the game are distributed
+
 # How to Crack
 
 It's nice to see that this game still starts up after all these years (it's nearly 30 years old now), but it runs much too fast on my machine, but that is not our concern right now, we only want to crack the CD-Check ;)<br>

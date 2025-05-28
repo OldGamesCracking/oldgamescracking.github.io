@@ -1,0 +1,398 @@
+; SafeDisc 2.51 Import Fixer
+; Specifically crafted for GTA 3, might not work with anything else
+; There should be no exception, so enable them to see if anything went wrong
+; Enable "No Script Timeout Warning"
+
+$iat_start = 0x0061D3B4
+$iat_size = 0x000002D4
+; This is where the first 'good' module is mapped (mss21.dll)
+$start_modules = 0x21100000
+$user_code_end = 0x01AC0000
+
+bpc
+bphwc
+membpc
+
+$g_func_address = 0
+$g_thunk_address = 0
+
+$iat_start_org = $iat_start
+$code_base = mem.base(eip)
+
+$iat_end = $iat_start + $iat_size
+
+$eip_org = eip
+$esp_org = esp
+
+
+; Fixes the intermodular calls by executing the Resolver
+; and then placing the proc address in the IAT
+; or pointing the call to another tunk if the proc already
+; has it's own thunk
+fix_iat:
+    esp = $esp_org
+	eip = $eip_org
+
+    cmp $iat_start, $iat_end
+    je fix_jumps
+    $target = dword:[$iat_start]
+	
+    cmp $target, 0
+    je next_import
+    cmp $target, $user_code_end
+    ja next_import
+    ; Check if reachable
+    cmp mem.valid($target), 1
+    jne next_import
+	
+	; Clear the thunk slot for later
+    dword:[$iat_start] = 0
+
+    ; Find CALLs to that stub
+	; findasm "call [0x{p:$iat_start}]", $code_base -> misses some
+	$address_bswapped = bswap($iat_start)
+	; findmemall $code_base, "FF15{p:$address_bswapped}", -1 -> has bugs
+	findmemall 0, "FF15{p:$address_bswapped}", -1
+	
+    $call_count = $result
+    $call_id = 0
+    process_calls:
+        cmp $call_id, $call_count
+        je next_import 
+        $call_from = ref.addr($call_id)
+        ;log "Call from {p:$call_from}"
+		
+		; Check if there is a 'ret' in front of the call -> Resolver would crash
+		cmp byte:[$call_from - 1], 0xc3
+		jne not_ignored
+		jmp next_call_id
+	
+	not_ignored:
+        ; Put the return address on the stack
+        esp -= 4
+        dword:[esp] = $call_from + dis.len($call_from)
+		
+		eip = $target
+		
+		call get_address_from_stub
+		cmp $g_func_address, 0
+		je next_import
+		call store_in_iat
+	
+		; Fix thunk address
+		dword:[$call_from + 2] = $g_thunk_address
+
+    next_call_id:
+        $call_id += 1
+        jmp process_calls
+
+next_import:
+    $iat_start += 4
+    jmp fix_iat
+
+
+; Fixes the intermodular calls that are
+; routed through a jump pad via finding
+; all special stubs (with ret addr) via a pattern
+fix_jumps:
+	; find all occurrences of "push ADDR; push VALUE; pushfd, pushad, push esp, push VALUE, call ADDR"
+	; findmemall $code_base, 68????????68????????9C605468????????E8, -1 -> has bugs
+	findmemall 0, 68????????68????????9C605468????????E8, -1
+	$jump_id = 0
+	$num_jumps = $RESULT
+loop_jumps:
+	esp = $esp_org
+	eip = $eip_org
+	cmp $jump_id, $num_jumps
+	jae fix_encrypted_procs
+	$stub_addr = ref.addr($jump_id)
+	cmp $stub_addr, $user_code_end
+	jae next_jump
+	$ret_addr = dword:[$stub_addr + 1]
+	$org_addr = $ret_addr - 6
+	; log "JMP from {p:$org_addr}"
+	; Is that a valid address?
+	cmp mem.valid($org_addr), 1
+	jne next_jump
+	; Check that we really have a jump there
+	cmp byte:[$org_addr], 0xe9
+	jne next_jump
+	eip = $stub_addr
+	call sti_safe
+	call get_address_from_stub
+	cmp $g_func_address, 0
+	je next_jump
+	call store_in_iat
+	
+	; Replace jump by call
+	asm $org_addr, "call [0x{p:$g_thunk_address}]"
+
+next_jump:
+	$jump_id += 1
+	jmp loop_jumps
+
+
+; Fixes all encrypted local procedures by going through all CALLs
+; and checking if the CALL goes to a jump pad, then letting the Resolver
+; decrypt the data, copying it to an allocated buffer, returning from the
+; proc and copying back the buffer
+fix_encrypted_procs:
+	; Set high enough so that all calls are found
+	; This currently can not work in chunks due to a bug
+	setmaxfindresult 1000000
+	$last_call_address = 0
+	; Not checked for overflow, so make large enough ;)
+	alloc 0x100000
+	cmp $RESULT, 0
+	je die
+	$stolen_bytes_buffer = $RESULT
+	
+loop_enc_procs:
+	; find all calls
+	; Note: There is currently a but in x64dbg that's why we always need to search the whole range
+	findmemall 0, E8, -1, user
+	$num_calls = $result
+	cmp $num_calls, 0
+	je fix_encrypted_procs_done
+
+	$enc_proc_id = 0
+loop_enc_procs_calls:
+	esp = $esp_org
+	eip = $eip_org
+	cmp $enc_proc_id, $num_calls
+	jae fix_encrypted_procs_done
+	$call_address = ref.addr($enc_proc_id)
+	cmp $call_address, $last_call_address
+	jb next_enc_proc
+	cmp $call_address, $user_code_end
+	$last_call_address = $call_address
+	jae fix_encrypted_procs_done
+	$call_offset = dword:[$last_call_address + 1]
+	$jumppad_location = ($last_call_address + $call_offset + 5) & 0xffffffff
+	cmp mem.valid($jumppad_location), 1
+    jne next_enc_proc
+
+xchg_eax:
+	; Check if 'push eax; mov eax' at target
+	cmp word:[$jumppad_location], 0xB850
+	jne xchg_ebx
+	; Check if 'xchg dword ptr ss:[esp], eax; ret' follows
+	cmp dword:[$jumppad_location + 6], 0xC3240487
+	je jumppad_found
+
+; 48c0bd
+xchg_ebx:
+	; Check if 'push ebx; mov ebx' at target
+	cmp word:[$jumppad_location], 0xBB53
+	jne xchg_ecx
+	; Check if 'xchg dword ptr ss:[esp], ebx; ret' follows
+	cmp dword:[$jumppad_location + 6], 0xC3241C87
+	je jumppad_found
+
+xchg_ecx:
+	; Check if 'push ecx; mov ecx' at target
+	cmp word:[$jumppad_location], 0xB951
+	jne xchg_edx
+	; Check if 'xchg dword ptr ss:[esp], ecx; ret' follows
+	cmp dword:[$jumppad_location + 6], 0xC3240C87
+	je jumppad_found
+	
+xchg_edx:
+	; Check if 'push edx; mov edx' at target
+	cmp word:[$jumppad_location], 0xBA52
+	jne xchg_ebp
+	; Check if 'xchg dword ptr ss:[esp], edx; ret' follows
+	cmp dword:[$jumppad_location + 6], 0xC3241487
+	je jumppad_found
+	
+xchg_ebp:
+	; Check if 'push ebp; mov ebp' at target
+	cmp word:[$jumppad_location], 0xBD55
+	jne xchg_esp
+	; Check if 'xchg dword ptr ss:[esp], ebp; ret' follows
+	cmp dword:[$jumppad_location + 6], 0xC3242C87
+	je jumppad_found
+	
+xchg_esp:
+	; Check if 'push esp; mov esp' at target
+	cmp word:[$jumppad_location], 0xBC54
+	jne xchg_esi
+	; Check if 'xchg dword ptr ss:[esp], esp; ret' follows
+	cmp dword:[$jumppad_location + 6], 0xC3242487
+	je jumppad_found
+
+xchg_esi:
+	; Check if 'push esi; mov esi' at target
+	cmp word:[$jumppad_location], 0xBE56
+	jne xchg_edi
+	; Check if 'xchg dword ptr ss:[esp], esi; ret' follows
+	cmp dword:[$jumppad_location + 6], 0xC3243487
+	je jumppad_found
+	
+xchg_edi:
+	; Check if 'push edi; mov edi' at target
+	cmp word:[$jumppad_location], 0xBF57
+	jne next_enc_proc
+	; Check if 'xchg dword ptr ss:[esp], edi; ret' follows
+	cmp dword:[$jumppad_location + 6], 0xC3243C87
+	jne next_enc_proc
+
+fix_encrypted_procs_done:
+	free $stolen_bytes_buffer
+	jmp end
+
+jumppad_found:
+	log "Call to jumppad fom {p:$last_call_address}"
+	
+	$ret_addr = $last_call_address + 5
+	bp $ret_addr
+	
+	; Get stub location
+	$stub_addr = dword:[$jumppad_location + 2]
+	bphws $jumppad_location, w, 1
+	
+	esp -= 4
+	dword:[esp] = $ret_addr
+	
+	eip = $stub_addr
+	
+	call sti_safe
+	call sti_safe
+	$hw_bp = esp
+	bphws $hw_bp, r
+	
+	; We will break multiple times, make sure we are in the right
+	; decrypt routine
+	search_decrypt_routine:
+		run
+		cmp word:[eip], 0x4d8b
+		je decrypt_routine_found
+		jmp search_decrypt_routine
+	
+	decrypt_routine_found:
+
+	bphwc $jumppad_location
+	
+	$len_stolen_bytes = dword:[ebp+0x58]
+	
+	; Sanity Check
+	cmp dword:[ebp+0x5C], $jumppad_location
+	jne die
+	
+	; log "len_stolen_bytes: {u:$len_stolen_bytes}"
+	
+	run
+	bphwc $hw_bp
+
+	call sti_safe
+	
+	memcpy $stolen_bytes_buffer, $jumppad_location, $len_stolen_bytes
+	
+	; Perform a return
+	eip = dword:[esp]
+	esp += 4
+	
+	run
+	
+	bpc $ret_addr
+	
+	; Copy back stolen bytes
+	memcpy $jumppad_location, $stolen_bytes_buffer, $len_stolen_bytes
+	
+	; memcpy sets $RESULT, so start all over
+	jmp loop_enc_procs
+
+next_enc_proc:
+	$enc_proc_id += 1
+	jmp loop_enc_procs_calls
+
+
+; We need to be at the start of the stub
+; The address will be returned via the global $g_func_address
+; Will be zero if an error occurs
+get_address_from_stub:
+	$esp_org_stub = esp
+	$g_func_address = 0
+	$ret_addr = dword:[esp]
+	call sti_safe
+	call sti_safe
+	; Place HW BP on stack so we break right in function later
+	$hw_bp = esp
+	bphws $hw_bp, r
+	run
+	bphwc $hw_bp
+	
+	; Check that we really arrived at the function
+	cmp dword:[esp+4], $ret_addr
+	jne die
+
+	$g_func_address = dword:[esp]
+
+	; Eat up the return address
+	esp = $esp_org_stub + 4
+	ret
+
+
+; This is basically a complicated 'sti' since x32dbg sometimes swallows an 
+; sti right after eip has changed (or something like that)
+sti_safe:
+	$eip_initial = eip
+perform_sti:
+	; step in as long as we are on a ret (hack)
+	cmp $eip_initial, eip
+	jne sti_performed
+	sti
+	jmp perform_sti
+sti_performed:
+	ret
+
+
+; stores the address in $g_func_address to the IAT
+; iat thunk address is returned via $g_thunk_address
+store_in_iat:
+	; Do we have this thunk already?
+	$search_iat_start = $iat_start_org
+	$search_iat_end = $search_iat_start + $iat_size
+
+	search_thunk:
+		cmp $search_iat_start, $search_iat_end
+		je thunk_not_found
+
+		cmp dword:[$search_iat_start], $g_func_address
+		jne next_thunk
+		$g_thunk_address = $search_iat_start
+		ret
+
+	next_thunk:
+		$search_iat_start += 4
+		jmp search_thunk
+
+	thunk_not_found:
+	
+	; Search for an empty slot
+	$search_iat_start = $iat_start_org
+	$search_iat_end = $search_iat_start + $iat_size
+
+	search_empty_slot:
+		cmp $search_iat_start, $search_iat_end
+		je die
+
+		cmp dword:[$search_iat_start], 0
+		jne next_slot
+		dword:[$search_iat_start] = $g_func_address
+		$g_thunk_address = $search_iat_start
+		ret
+
+	next_slot:
+		$search_iat_start += 4
+		jmp search_empty_slot
+
+
+die:
+	error "Something went wrong, aborting"
+
+
+end:
+    esp = $esp_org
+    eip = $eip_org
+	log "Done ;)"

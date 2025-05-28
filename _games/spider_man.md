@@ -19,6 +19,12 @@ tags:
 | Tested under | Win 10 |
 | Scene-Crack by | ??? |
 
+### Disclaimer
+
+- The games are cracked for educational purpose and to regain compatibility with modern systems
+- The games are more than 20 years old and can be found freely on the net via e.g. archive.org
+- No parts of the game are distributed
+
 # How to Crack
 
 This game has probably the most simplest form of a protection. As far as I can tell the game does not use any anti-debugging-tricks or copy-protection whatsoever, just a simple CD-Check, but we will see this under _'Protection Details'_.<br>

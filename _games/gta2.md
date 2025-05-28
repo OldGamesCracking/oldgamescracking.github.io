@@ -13,7 +13,7 @@ tags:
 
 ## Game Specs
 
-| Name | gta2 |
+| Name | Grand Theft Auto 2 |
 | ------------- | ------------- |
 | Release-Date | 1997 |
 | Redump ID | [31547](http://redump.org/disc/31547/) |
@@ -32,6 +32,11 @@ tags:
 
 - [Luca D'Amico](https://www.lucadamico.dev/) whote wrote a nice [Paper](https://www.lucadamico.dev/papers/drms/safedisc/MidtownMadness.pdf) on the topic which I partly used as inspiration. 
 
+### Disclaimer
+
+- The games are cracked for educational purpose and to regain compatibility with modern systems
+- The games are more than 20 years old and can be found freely on the net via e.g. archive.org
+- No parts of the game are distributed
 
 # How to Crack
 
@@ -69,7 +74,7 @@ $addr_RtlLeaveCriticalSection = RtlLeaveCriticalSection
 $addr_GetModuleHandleA = GetModuleHandleA
 
 dotrace:
-	ticnd "eip > 0x70000000"
+	ticnd "eip > 0x20000000"
 
 	cmp eip, $addr_IsDebuggerPresent
 	je is_IsDebuggerPresent
@@ -308,7 +313,7 @@ Finally we have a fully unpacked Game Exe, time to test it without the CD ;)<br>
 
 Under Windows XP the game has some issues which seem to come from the OS itself not the Game but it turns out that it's working fine under my Windows 10, but wait a minute. What is that?
 
-![CD-Check]({{site.url}}/assets/gta2/cd_check.png)
+![CD-Check]({{site.url}}/assets/gta2/cd_check.png)<br>
 (Please insert disc)<br><br>
 
 Looks like they added some more CD-Checks. Probably it's the same as with [GTA 1](/games/grand_theft_auto) in that they left the music on the CD and only the nessecary game files are installed to the hard drive. Ok, so open our new executeable in x32dbg and have a look around. I immedeately found three strings "no_cd1,2,3" that caught my attention. So put a BP on them and restart the game. We break and we see two jumps:
