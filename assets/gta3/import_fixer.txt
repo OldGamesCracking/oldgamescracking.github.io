@@ -1,6 +1,6 @@
 ; SafeDisc 2.51 Import Fixer
 ; Specifically crafted for GTA 3, might not work with anything else
-; There should be no exception, so enable them to see if anything went wrong
+; There should be no exceptions, so enable them to see if anything goes wrong
 ; Enable "No Script Timeout Warning"
 
 $iat_start = 0x0061D3B4

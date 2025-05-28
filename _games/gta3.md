@@ -299,7 +299,7 @@ So in order to make that happen, we need to modify the script so that it will fi
 The script ran fine up to a certain point and the imports were restored but from time to time the game crashed completely or exited while the script was still running. I spent a fair amount of time tracking down the cause and I still don't know the real cause but while searching for similarities amongst the imoprts that were crashing, I discovered, that every crashing import had a CALL that was directly located below a _RET_.<br>
 Either they are fake-Calls that deliberately crash upon using the Resolver on them, probably placed in the empty space that some linkers leave between compilation units, or they serve internal purposes to SafeDisc. Or maybe these were once some kind of Unit-Testing thingies or some guards or whatever but the underlaying library was removed so the Resolver is unable to find the proc addresses... who knows, I did not dig deeper into that.
 
-![Broken Call]({{site.url}}/assets/gta3/broken_call.PNG)
+![Broken Call]({{site.url}}/assets/gta3/broken_call.png)
 
 Also x32dbg could not find any execution paths to these strange CALLs (at least the once I checked), so I gave it a shot and simply ignored every CALL with _RET_ in front of it:
 
@@ -475,54 +475,58 @@ So how does the script look like?<br>
 
 That was rather straight forward and worked without any hassle. Time to start the game... and it crashed. Dammit! What's the cause this time?<br>
 
-Turns out, SafeDisc has a third Ace up it's sleeve: The *_Jump Pad Driven, Byte-Stealing, Self-Aware Stub_* (JPDBSSAS) :D<br>
+Turns out, SafeDisc has a third Ace up it's sleeve: The _Jump Pad Driven, Byte-Stealing, Self-Aware Stub_ (JPDBSSAS) :D<br>
 This one took nearly four days to solve and is the most whacky/hacky part of the script, also because x32dbg has - at the time of the writing - some bugs I had to maneuver around, but well, it gets the job done ;)<br>
 Enough talk, let's see some code.<br>
 
 At - for example - 0x0048C0BD you find a call to a routine that looks like the following:
 
-![Small Trampoline]({{site.url}}/assets/gta3/small_trampoline.PNG)
+![Small Trampoline]({{site.url}}/assets/gta3/small_trampoline.png)
 
 This is a tiny jump pad that will just put an address on the stack and jump there via a _RET_. So far, nothing special. At the address we see:
 
 ![Resolver 2]({{site.url}}/assets/gta3/byte_stealer.png)
 
-This looks and behaves pretty much as the Resolver before, only that I got quite confused on to where it will resolve to. It turned out, that it resolves to the address of the initial CALL from the user code, where the jump pad is but it had altered (decrypted) the code so that the jump pad was replaced with the real code now (compare the addresses):
+This looks and behaves pretty much as the Resolver before, only that I got quite confused on to where it will resolve to. It turned out, that it resolves to the address of the jump pad we just came from but it had altered (decrypted) the code so that the jump pad was replaced with the real code now (compare the addresses in the image):
 
 ![Real Code]({{site.url}}/assets/gta3/real_code.png)
 
 Well, that seemed labor intensive but easy enough I thought, I just had to:
 
 - Go through all regular CALLs in the program (Pattern "E8", jep, just 1 byte)
-- Check the code at the CALL destination and see if it resembles the jump pad (jep, make sure to include different registers [I think two are used])
+- Check the code at the CALL destination and see if it resembles the jump pad (jep, make sure to include different registers [I think two are actually used])
 - Proceed as above to exit the Resolver and land in the user code
 - Done ;)
 
-Well, yes, that works exactly one time and then things go south :( After some while I realized that once we land back in user-code, the return value on the stack points back to the Resolver. That means that - for whatever reason - the Resolver wants to have a second look at things. Well, how bad can it be to place a BP at the original return address and let the Resolver do it's Resolver thingies? Quite bad :D<br>
-Turns out, now the Resolver was not crashing anymore and the script ran finde, but the code gets re-scrambled again by the Resolver O.o<br>
-Now comes the challenge: How can we reconstruct the code if we must pass execution back to the Resolver but this will ultimately fuck things up again?<br>
-Well, let's try for the following:
+Well, yes, that works exactly one time and then things go south :( After some while I realized that once we land back in user-code, the return value on the stack points back to the Resolver. That means that - for whatever reason - the Resolver wants to have a second look at things. Well, how bad can it be to place a BP at the original return address and let the Resolver do it's Resolver thingies? Answer: Quite bad :D<br>
+Turns out, now the Resolver was not crashing anymore and the script ran fine, but the code gets re-scrambled again by the Resolver and the jump pad is back O.o<br>
+So something like that:<br>
+
+![Crypt Resolver]({{site.url}}/assets/gta3/resolver_crypt.png)
+
+Now comes the challenge: How can we re-construct the code if we must pass execution back to the Resolver but this will ultimately fuck things up again?<br>
+Well, let's try the following:
 
 - Let the Resolver unscramble the code
 - Intercept the jump back to the code just as before (BP on pushfd)
 - Copy the unscrambled code
 - Instantly return via a "eip = [esp]; esp += 4"
-- Place BP on original return address, run and break there
-- Overwrite jump pad with copied code
+- Place BP on the original return address, run and break there
+- Overwrite now re-installed jump pad with copied code
 - Done
 
 Sounds easy and straight forward, right? Well, there is one samll detail: No one ever told us how many bytes to copy and the information seems nowhere around :(<br>
-In order to obtain that information I placed a HW BP on 'write' on the first byte of the scrambled code hoping to land in a loop in the Resolver that would iterater over some control variable. I had to break multiple times since the code seems to be unscrambled in multiple passes, but then I found something:
+In order to obtain that information I placed a HW BP on 'write' on the first byte of the scrambled code (the jump pad) hoping to land in a loop in the Resolver that would iterater over some control variable. I had to break multiple times since the code seems to be unscrambled in multiple passes, but then I found something:
 
 ![Number of Bytes]({{site.url}}/assets/gta3/num_bytes.png)
 
-The _CMP_ is what we were looking for. Strangely, when you run the Resolver for a given stub the first time, this value only holds a quite small value (0x2C in my case), the second time it holds the real value (0x301). I'm guessing for the first time, the data is unscrambled in chunks and for every other run it unscrambles the whole data in one go. Luckily you can always get the total byte-count at ebp+0x5C (at the time your HW BP breaks within the loop).<br>
+The _CMP_ is what we were looking for. Strangely, when you run the Resolver for a given stub the first time, this value only holds a quite small value (0x2C in my case), the second time it holds the real value (0x301). I'm guessing for the first time, the data is unscrambled in chunks and for every other run it unscrambles the whole data in one go. Luckily you can always get the total byte-count at ebp+0x5C (in the moment when your HW BP breaks within the loop).<br>
 With that out of the way, we finally know how many bytes to copy to and from the buffer.<br>
 
-Moment of truth: The game starts up and is running fine - yay :) (besides some menu glitches which are probably not caused by our crack).<br>
+Adjust the script and the moment of truth follows: The game starts up and is running fine - yay :) (besides some menu glitches which are probably not caused by our crack).<br>
 
-Since the final script got really long, it is not included in the article, you can fin it [here](/assets/gta3/import_fixer.txt).<br>
+Since the final script got really long, it is not included in the article, you can find it [here](/assets/gta3/import_fixer.txt).<br>
 
 In Part II we will have a look at the CD-Checks.<br>
 
-![CD Check]({{site.url}}/assets/gta3/ch_check.jpg)
+![CD Check]({{site.url}}/assets/gta3/cd_check.jpg)
