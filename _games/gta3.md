@@ -47,7 +47,7 @@ As always, open the Game in x32dbg (disable ScyllaHide and pass all exceptions) 
 
 ![No disc]({{site.url}}/assets/gta3/busted.png)
 
-If we are lucky, they did not change the detection scheme. So let's try the script from last time:
+If we are lucky, they did not change the detection scheme since SafeDisc v1. So let's try the script from last time:
 
 ```asm
 ; Start script at ep
@@ -86,7 +86,7 @@ loop:
 end:
 ```
 
-So the script hides the debugger from PEB-checking and checks to NtQueryInformationProcess and breaks on the first call to either _SetThreadContext_, _WriteProcessMemory_ or _ResumeThread_ which were the interesting ones last time.<br>
+So the script hides the debugger from PEB-checking and NtQueryInformationProcess and breaks on the first call to either _SetThreadContext_, _WriteProcessMemory_ or _ResumeThread_ which were the interesting ones last time.<br>
 
 The disc spins up it does some readings and after about 10 seconds, we break in _ResumeThread_ which is kinda unexpected since that means that the Game process is already up and running.<br>
 
@@ -210,7 +210,7 @@ I single stepped past the _pushfd_ and placed a hardware breakpoint on the top o
 See how the address of the procedure that we actually tried to call is on the stack? If we return now, we land in that procedure. And the original return address is also there. Ok, this seems repairable:
 
 - Go through the IAT and check for addresses that are in user sections (I used < 0x21100000)
-- Place a HW BP 'on access' on the stack once the first value is pushed in the stub
+- Place a HW BP 'on access' on the stack once the first value is pushed
 - Run freely and then the BP will trigger two times (the first time is when the function address is written)
 - We should be in the procedure and can retrieve its address 
 
@@ -280,7 +280,7 @@ In order to address the issue, I modified the script to only resolve that functi
 
 Let's try if we can pull that off with a script...<br>
 
-- Go through the IAT and select the addresses that go to a stub (idientified via the address)
+- Go through the IAT and select the addresses that goes to a stub (idientified via the address-range [within user code])
 - Find a CALL to that stub via a searchpattern
 - Push the return address of that CALL on the stack
 - Modify EIP to point to the stub
@@ -301,7 +301,7 @@ Either they are fake-Calls that deliberately crash upon using the Resolver on th
 
 ![Broken Call]({{site.url}}/assets/gta3/broken_call.png)
 
-Also x32dbg could not find any execution paths to these strange CALLs (at least the once I checked), so I gave it a shot and simply ignored every CALL with _RET_ in front of it:
+Also x32dbg could not find any execution paths to these strange CALLs (at least the one I checked), so I gave it a shot and simply ignored every CALL with _RET_ in front of it:
 
 ```asm
 $iat_start = 0x0061D3B4
@@ -445,7 +445,7 @@ end:
     eip = $eip_org
 ```
 
-What a monstrosity of a script...<br><br>
+What a monstrosity of a script... (and yet tiny, compared to what will follow)<br><br>
 
 After the script finally passed without crashing I dumped and fixed the game just to discover that it still crashes on me. I tracked down the cause and landed on this strange thing:
 
@@ -455,7 +455,7 @@ A JMP to some quite far away portion of the memory, the code there looks somethi
 
 ![Import]({{site.url}}/assets/gta3/import.png)
 
-So basically it first retrieves EIP via the CALL to the next line and then gets the address of a stub and places it on the stack to jump there via a return. The stub looks just like we know it:
+So basically it first retrieves EIP via the CALL to the next line (CALL +0) and then gets the address of a stub and places it on the stack to jump there via a return. The stub looks just like we know it:
 
 ![Import Stub]({{site.url}}/assets/gta3/stub.png)
 
@@ -528,5 +528,7 @@ Adjust the script and the moment of truth follows: The game starts up and is run
 Since the final script got really long, it is not included in the article, you can find it [here](/assets/gta3/import_fixer.txt).<br>
 
 In Part II we will have a look at the CD-Checks.<br>
+
+BTW: Dont't wast your time on reading the script, it's here just for the record. In Part II I have changed, fixed and optimized many aspects of it ;) 
 
 ![CD Check]({{site.url}}/assets/gta3/cd_check.jpg)
