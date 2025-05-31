@@ -1,15 +1,20 @@
-; SafeDisc 2.30-2.51 Import Fixer
+; SafeDisc v2.30-2.51 Import Fixer
+; Tested with x64dbg, Mar 15 2025
 ; Tested on:
 ;   Die Siedler IV (v2.30)
+;   Stronghold (v2.40)
 ;   GTA 3 (v2.51)
 ; There should be no exceptions, so enable them to see if anything goes wrong
 ; Enable "No Script Timeout Warning"
 
-$iat_start = 0x0057A000
-$iat_size = 0x000008E8
+; Config
+$iat_start = ???
+$iat_size = ???
 ; Not to be confused with $code_end, this inclused all usercode
 ; also the temporary SafeDisc
-$user_code_end = 0x18000000
+$user_code_end = ???
+
+log "SafeDisc v2.30-2.51 Import Fixer started"
 
 bpc
 bphwc
@@ -111,7 +116,7 @@ loop_push_rets:
     cmp $stub_addr, $user_code_end
     jae next_push_ret
 
-    log "push/ret: {p:$jumppad_location} -> {p:$stub_addr}"
+    ;log "push/ret: {p:$jumppad_location} -> {p:$stub_addr}"
 
     ; Find a CALL to that loction to get a valid return address
     findmemall 0, E8, -1, user
@@ -266,7 +271,7 @@ loop_jumppads:
     cmp $jumppad_location, $code_end
     jae next_jumppad
 
-    log "jumppad: {p:$jumppad_location}"
+    ;log "jumppad: {p:$jumppad_location}"
 
     ; Find a CALL to that loction to get a valid return address
     findmemall 0, E8, -1, user
@@ -317,6 +322,8 @@ fix_iat:
     cmp $iat_start, $iat_end
     je fix_jumps
     $target = dword:[$iat_start]
+
+    $address_bswapped = bswap($iat_start)
     
     cmp $target, 0
     je next_import
@@ -331,7 +338,6 @@ fix_iat:
 
     ; Find CALLs to that stub
     ; findasm "call [0x{p:$iat_start}]", $code_base -> misses some
-    $address_bswapped = bswap($iat_start)
     ; findmemall $code_base, "FF15{p:$address_bswapped}", -1 -> has bugs
     findmemall 0, "FF15{p:$address_bswapped}", -1
     
@@ -339,7 +345,7 @@ fix_iat:
     $call_id = 0
     process_calls:
         cmp $call_id, $call_count
-        je check_call_via_register_eax 
+        je check_call_via_indirect_jmp 
         $call_from = ref.addr($call_id)
         ;log "Call from {p:$call_from}"
         
@@ -355,10 +361,9 @@ fix_iat:
         
         eip = $target
         
-        call get_address_from_stub
+        call get_and_store_address_from_stub
         cmp $g_func_address, 0
-        je check_call_via_register_eax
-        call store_in_iat
+        je check_call_via_indirect_jmp
     
         ; Fix thunk address
         dword:[$call_from + 2] = $g_thunk_address
@@ -367,9 +372,37 @@ fix_iat:
         $call_id += 1
         jmp process_calls
 
+check_call_via_indirect_jmp:
+    ; find "jmp [addr]"
+    findmemall 0, "FF25{p:$address_bswapped}", -1
+    
+    $jmp_count = $RESULT
+    $jmp_id = 0
+    process_jmps_indirect:
+        cmp $jmp_id, $jmp_count
+        je check_call_via_register_eax 
+        $jmp_from = ref.addr($jmp_id)
+        ;log "JMP from {p:$jmp_from}"
+
+        ; Put the return address on the stack
+        esp -= 4
+        dword:[esp] = 0
+        
+        eip = $target
+
+        call get_and_store_address_from_stub
+        cmp $g_func_address, 0
+        je check_call_via_register_eax
+    
+        ; Fix thunk address
+        dword:[$jmp_from + 2] = $g_thunk_address
+
+    next_jmp_id:
+        $jmp_id += 1
+        jmp process_jmps_indirect
+
 check_call_via_register_eax:
     ; Find a "mov eax [addr]"
-    $address_bswapped = bswap($iat_start)
     findmemall 0, "A1{p:$address_bswapped}", -1
 
     $call_count = $RESULT
@@ -378,7 +411,7 @@ check_call_via_register_eax:
         cmp $call_id, $call_count
         je check_call_via_register_ebx 
         $mov_at = ref.addr($call_id)
-        log "MOV EAX at {p:$mov_at}"
+        ;log "MOV EAX at {p:$mov_at}"
 
         ; Put the return address on the stack
         esp -= 4
@@ -386,10 +419,9 @@ check_call_via_register_eax:
         
         eip = $target
         
-        call get_address_from_stub
+        call get_and_store_address_from_stub
         cmp $g_func_address, 0
         je check_call_via_register_ebx
-        call store_in_iat
     
         ; Fix thunk address
         dword:[$mov_at + 2] = $g_thunk_address
@@ -399,7 +431,6 @@ check_call_via_register_eax:
 
 check_call_via_register_ebx:
     ; Find a "mov ebx [addr]"
-    $address_bswapped = bswap($iat_start)
     findmemall 0, "8B1D{p:$address_bswapped}", -1
 
     $call_count = $RESULT
@@ -416,10 +447,9 @@ check_call_via_register_ebx:
         
         eip = $target
         
-        call get_address_from_stub
+        call get_and_store_address_from_stub
         cmp $g_func_address, 0
         je check_call_via_register_ecx
-        call store_in_iat
     
         ; Fix thunk address
         dword:[$mov_at + 2] = $g_thunk_address
@@ -429,7 +459,6 @@ check_call_via_register_ebx:
 
 check_call_via_register_ecx:
     ; Find a "mov ecx [addr]"
-    $address_bswapped = bswap($iat_start)
     findmemall 0, "8B0D{p:$address_bswapped}", -1
 
     $call_count = $RESULT
@@ -438,7 +467,7 @@ check_call_via_register_ecx:
         cmp $call_id, $call_count
         je check_call_via_register_edx 
         $mov_at = ref.addr($call_id)
-        log "MOV ECX at {p:$mov_at}"
+        ;log "MOV ECX at {p:$mov_at}"
 
         ; Put the return address on the stack
         esp -= 4
@@ -446,10 +475,9 @@ check_call_via_register_ecx:
         
         eip = $target
         
-        call get_address_from_stub
+        call get_and_store_address_from_stub
         cmp $g_func_address, 0
         je check_call_via_register_edx
-        call store_in_iat
     
         ; Fix thunk address
         dword:[$mov_at + 2] = $g_thunk_address
@@ -459,7 +487,6 @@ check_call_via_register_ecx:
 
 check_call_via_register_edx:
     ; Find a "mov edx [addr]"
-    $address_bswapped = bswap($iat_start)
     findmemall 0, "8B15{p:$address_bswapped}", -1
 
     $call_count = $RESULT
@@ -468,7 +495,7 @@ check_call_via_register_edx:
         cmp $call_id, $call_count
         je check_call_via_register_edi 
         $mov_at = ref.addr($call_id)
-        log "MOV EDX at {p:$mov_at}"
+        ;log "MOV EDX at {p:$mov_at}"
 
         ; Put the return address on the stack
         esp -= 4
@@ -476,10 +503,9 @@ check_call_via_register_edx:
         
         eip = $target
         
-        call get_address_from_stub
+        call get_and_store_address_from_stub
         cmp $g_func_address, 0
         je check_call_via_register_edi
-        call store_in_iat
     
         ; Fix thunk address
         dword:[$mov_at + 2] = $g_thunk_address
@@ -489,7 +515,6 @@ check_call_via_register_edx:
 
 check_call_via_register_edi:
     ; Find a "mov edi [addr]"
-    $address_bswapped = bswap($iat_start)
     findmemall 0, "8B3D{p:$address_bswapped}", -1
 
     $call_count = $RESULT
@@ -506,10 +531,9 @@ check_call_via_register_edi:
         
         eip = $target
         
-        call get_address_from_stub
+        call get_and_store_address_from_stub
         cmp $g_func_address, 0
         je check_call_via_register_esi
-        call store_in_iat
     
         ; Fix thunk address
         dword:[$mov_at + 2] = $g_thunk_address
@@ -519,7 +543,6 @@ check_call_via_register_edi:
 
 check_call_via_register_esi:
     ; Find a "mov esi [addr]"
-    $address_bswapped = bswap($iat_start)
     findmemall 0, "8B35{p:$address_bswapped}", -1
 
     $call_count = $RESULT
@@ -536,10 +559,9 @@ check_call_via_register_esi:
         
         eip = $target
         
-        call get_address_from_stub
+        call get_and_store_address_from_stub
         cmp $g_func_address, 0
         je check_call_via_register_ebp
-        call store_in_iat
     
         ; Fix thunk address
         dword:[$mov_at + 2] = $g_thunk_address
@@ -549,7 +571,6 @@ check_call_via_register_esi:
 
 check_call_via_register_ebp:
     ; Find a "mov ebp [addr]"
-    $address_bswapped = bswap($iat_start)
     findmemall 0, "8B2D{p:$address_bswapped}", -1
 
     $call_count = $RESULT
@@ -566,10 +587,9 @@ check_call_via_register_ebp:
         
         eip = $target
         
-        call get_address_from_stub
+        call get_and_store_address_from_stub
         cmp $g_func_address, 0
         je next_import
-        call store_in_iat
     
         ; Fix thunk address
         dword:[$mov_at + 2] = $g_thunk_address
@@ -601,7 +621,7 @@ loop_jumps:
     jae next_jump
     $ret_addr = dword:[$stub_addr + 1]
     $org_addr = $ret_addr - 6
-    ; log "JMP from {p:$org_addr}"
+    ;log "JMP from {p:$org_addr}"
     ; Is that a valid address?
     cmp mem.valid($org_addr), 1
     jne next_jump
@@ -610,10 +630,9 @@ loop_jumps:
     jne next_jump
     eip = $stub_addr
     call sti_safe
-    call get_address_from_stub
+    call get_and_store_address_from_stub
     cmp $g_func_address, 0
     je next_jump
-    call store_in_iat
     
     ; Replace jump by call
     asm $org_addr, "call [0x{p:$g_thunk_address}]"
@@ -635,6 +654,7 @@ shared_get_stolen_bytes:
     call sti_safe
     $hw_bp = esp
     bphws $hw_bp, r
+    SetHardwareBreakpointSilent $hw_bp, 1
 
     run
     bphwc $hw_bp
@@ -652,7 +672,7 @@ shared_get_stolen_bytes:
 copy_full_buffer:
     $copy_size = $buffer_size
 copy_remaining:
-    log "Copy {p:$copy_size} from {p:$jumppad_location}"
+    ;log "Copy {p:$copy_size} from {p:$jumppad_location}"
     memcpy $stolen_bytes_buffer, $jumppad_location, $copy_size
    
     ; Perform a return
@@ -663,6 +683,7 @@ copy_remaining:
     call sti_safe
     $hw_bp = esp
     bphws $hw_bp, r
+    SetHardwareBreakpointSilent $hw_bp, 1
     
     run
     bphwc $hw_bp
@@ -685,6 +706,7 @@ get_address_from_stub:
     ; Place HW BP on stack so we break right in function later
     $hw_bp = esp
     bphws $hw_bp, r
+    SetHardwareBreakpointSilent $hw_bp, 1
     run
     bphwc $hw_bp
     
@@ -752,6 +774,16 @@ store_in_iat:
     next_slot:
         $search_iat_start += 4
         jmp search_empty_slot
+
+
+; Combination of get_address_from_stub + store_in_iat
+get_and_store_address_from_stub:
+    call get_address_from_stub
+    cmp $g_func_address, 0
+    je get_and_store_address_from_stub_done
+    call store_in_iat
+get_and_store_address_from_stub_done:
+    ret
 
 
 die:
