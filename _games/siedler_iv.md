@@ -1,10 +1,11 @@
 ---
 layout: post
 author: OldGamesCracking
-title: "Die Siedler IV"
+title: "Die Siedler (Stellers) IV"
 date: 2025-05-31
 tags:
     - "Die Siedler IV"
+    - "Settlers IV"
     - "Game Cracking"
     - "Reverse Engineering"
     - "SafeDisc"
@@ -38,7 +39,7 @@ tags:
 
 # How to Crack
 
-*Note:* This game won't run on any of my PCs so I guess the crack is not complete.<br>
+*Note:* This game won't run on any of my PCs so I could not fully test it and I guess the crack is not complete.<br>
 
 I got this game a while ago in a bundle of many other games. Upon checking Redump, I discovered, that it was using the same protection I had tackled in the [last writeup](/games/gta3), only a slightly earlier version, so I thought I might see how they differ. I won't go into much details this time, for that, see the GTA 3 writeup.<br>
 
@@ -48,7 +49,7 @@ By the way, if you wonder, how to detect the exact SafeDisc version (at least fo
 
 This would be v2.10.030.<br>
 
-I again used ProcMon to give myself a short overview and it looked like this version already does this tempfile thing, so we can stay within the process. The real game.exe is actaully s4_main.exe in the _Exe_ subfolder.<br>
+I again used ProcMon to give myself a short overview and it looked like this version already does this tempfile thing, so we can stay within the process. The real game.exe is actaully s4\_main.exe in the _Exe_ subfolder.<br>
 
 The debugger detection is the same as before (PEB & NtQueryInformationProcess), so I simply used ScyllaHide this time to tackle that more easily:
 
