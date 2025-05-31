@@ -42,6 +42,12 @@ tags:
 
 I got this game a while ago in a bundle of many other games. Upon checking Redump, I discovered, that it was using the same protection I had tackled in the [last writeup](/games/gta3), only a slightly earlier version, so I thought I might see how they differ. I won't go into much details this time, for that, see the GTA 3 writeup.<br>
 
+By the way, if you wonder, how to detect the exact SafeDisc version (at least for v2.x), search for the string `BoG_ *90.0&!!  Yy>` in the .exe file, the three 32-Bit values after that are the Major, Minor, Fix version:
+
+![SafeDisc Version]({{site.url}}/assets/siedler_iv/safedisc_version.png).
+
+This would be v2.10.030.<br>
+
 I again used ProcMon to give myself a short overview and it looked like this version already does this tempfile thing, so we can stay within the process. The real game.exe is actaully s4_main.exe in the _Exe_ subfolder.<br>
 
 The debugger detection is the same as before (PEB & NtQueryInformationProcess), so I simply used ScyllaHide this time to tackle that more easily:
