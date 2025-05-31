@@ -2,7 +2,7 @@
 layout: post
 author: OldGamesCracking
 title: "Stronghold"
-date: 2025-05-xx
+date: 2025-05-31
 tags:
     - "Stronghold"
     - "Game Cracking"
@@ -14,10 +14,10 @@ tags:
 
 | Name | Stronghold |
 | ------------- | ------------- |
-| Release-Date | 02/2001 |
-| Redump ID | [48590](http://redump.org/disc/48590/) |
+| Release-Date | 10/2001 |
+| Redump ID | [52624](http://redump.org/disc/52624/) |
 | Protection | SafeDisc v2.40.010 |
-| Cracked under | Win XP + Win 10 |
+| Cracked under | Win XP |
 | Tested under | Win XP |
 | Scene-Crack by | [CLASS](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=5132) / [Fairlight](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=5134) |
 
