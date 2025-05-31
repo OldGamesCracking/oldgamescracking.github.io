@@ -56,9 +56,9 @@ You can get the original Myth release [here](https://archive.org/details/grand.-
 
 ![CD Check]({{site.url}}/assets/gta3/myth_installer.png)
 
-The original 'Installation' of the Myth version did not work on my machine, but I figured that if you copy the "Audio" folder from CD2 to the installdir, you could use the gta3.exe of Myth and play the game without a CD or ISO (that's actually what they did). But how did they do this?<br>
+The original 'Installation' of the Myth version did not work on my machine, but I figured that if you copy the "Audio" folder from CD2 to the installdir, you could use the gta3.exe of Myth and play the game without a CD or ISO (copying the Audio folder is actually one part of the solution and that's also what Myth did). But still, how did they tell the game to load the files locally?<br>
 In order to find the differences between the unpacked but unaltered version (ours/Deviance) and the No-CD-Crack from Myth, I dumped the text section of both EXEs and masked out all the intermodular CALLs since our/their IAT looks slightly different of course.<br>
-The first thing I noticed is that they reconstructed some of the orphaned jump pads, e.g. at 0x0046B0D0 which I did not touch. They are orphaned since there is no corresponding CALL to them. I have no idea how they reconstructed them, maybe by hand, since I had absolutely no luck reconstructing them automatically, because every time I tried I could reconstruct the first one and then something internally in the SafeDisc code broke. Also saving/copying the whole SafeDisc Module to restore the original state did not seem to work. Maybe they just reversed the inner bits of the Resolver, who knows - it doesen't matter anyways I guess.<br>
+The first thing I noticed is that they reconstructed some of the orphaned jump pads, e.g. at 0x0046B0D0 which I did not touch. They are orphaned since there is no corresponding CALL to them. I have no idea how they reconstructed them, maybe by hand, since I had absolutely no luck reconstructing them automatically, because every time I tried I could reconstruct the first one and then something internally in the SafeDisc code broke. Also saving/copying the whole SafeDisc Module to restore the original state did not seem to work. Maybe they just reversed the inner bits of the Resolver, who knows - it doesen't matter anyways, I guess.<br>
 One thing I actually seem to have missed (although the games runs fine) is the reconstruction of one large part of the code starting at 0x00590A00 (Called from 0x0048C7CC). There is a push/ret combination that ends up in a stub. Interestingly that thing did not break down on us, maybe it's an unreached part of the code or it is used for something later in the game. I have added this one to the new script.
 
 ![Missed Call]({{site.url}}/assets/gta3/missed.png)
@@ -92,7 +92,7 @@ Then patched the check so that the local folder is seen as a CD-Drive:
 
 That's pretty much it. There is another check they NOPed out, but I don't know when this gets triggered, so I couldn't test it:
 
-![CD drive]({{site.url}}/assets/gta3/cd_drive.png)
+![NOPed out code]({{site.url}}/assets/gta3/noped_out.png)
 
 As I've already said in Part I, I have changed the script in various aspects, you can find it [here](/assets/gta3/import_fixer_v2.txt)<br><br>
 
