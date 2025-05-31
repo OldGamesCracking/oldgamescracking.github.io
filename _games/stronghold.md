@@ -56,13 +56,12 @@ $user_code_end = 0x21100000
 ```
 
 It takes some time, but eventually, it finishes without any error. Scylla is happy and we can start the game. But it won't :(<br>
-Upon further inspection I realized that this time another flavor is added to the mix: Indirect jumps.
-Which we saw already in GTA 3, but this time they are not added by SafeDisc but are intentional by the game:
+Upon further inspection I realized that this time another flavor is added to the mix: Indirect jumps, which we saw already in GTA 3, but this time they are not added by SafeDisc but are intentionally added by the compiler:
 
 ![Indirect Jumps]({{site.url}}/assets/stronghold/indirect_jumps.png)
 
 Well, this is pretty much the same as normal CALLs only a different Opcode is used. For the return address, again, I simply ignored it and used zero just as we did [the last time](/games/siedler_iv). This actually works surprisingly well.<br>
 
-One thing that did not work so well was testing the game under Win 10. It crashes and I don't have a clue why (probably some Video Card driver issue). Interestingly the game works absolutely perfect in the VM including animations, videos and all the other stuff, which it normally doesn't. So I would still call this a success. And also the developer were so nice to not include any additional CD-Checks :)
+One thing that did not work so well was testing the game under Win 10. It crashes and I don't have a clue why (probably some Video Card driver issue). Interestingly the game works absolutely perfect in the VM including animations, videos and all the other stuff, which it normally doesn't. So I would still call this a success. And also the developers were so nice to not include any additional CD-Checks :)
 
 [The unpacking script (At the time of writing this article)](https://github.com/OldGamesCracking/oldgamescracking.github.io/blob/ea0a33b08e53aef5a7df1898101db537168e5415/assets/safedisc/safedisc_import_fixer.txt)
