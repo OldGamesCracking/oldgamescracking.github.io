@@ -29,6 +29,7 @@ tags:
 - ProcMon 3.1 (Win XP compatible)
 - PE tool of your choice (e.g. PE-bear)
 - The original Game-CD of course ;)
+- The previous articles on SafeDisc
 - Eine Kiste Club-Mate
 
 ### Disclaimer
@@ -45,7 +46,7 @@ I got this game a while ago in a bundle of many other games. Upon checking Redum
 
 By the way, if you wonder, how to detect the exact SafeDisc version (at least for v2.x), search for the string `BoG_ *90.0&!!  Yy>` in the .exe file, the three 32-Bit values after that are the Major, Minor, Fix version:
 
-![SafeDisc Version]({{site.url}}/assets/siedler_iv/safedisc_version.png).
+![SafeDisc Version]({{site.url}}/assets/siedler_iv/safedisc_version.png)
 
 This would be v2.10.030.<br>
 
@@ -90,3 +91,11 @@ Turns out, this idea works fine ;) The only tideous task was to implement the ch
 Unfortunately, while SafeDisc seems to be defeated now, the game still crashes on all of my PCs. I guess it has problems with modern GPUs. So let's leave it that way and cary on to another game. Was still a nice challenge and the Script grew a bit.<br>
 
 [The unpacking script (At the time of writing this article)](https://github.com/OldGamesCracking/oldgamescracking.github.io/blob/4e4dd0a1f3dd004ca2bee712dca122df3d53ad0e/assets/safedisc/safedisc_import_fixer.txt)
+
+The settings are:
+
+```
+$iat_start = 0x0057A000
+$iat_size = 0x000008E8
+$user_code_end = 0x18000000
+```

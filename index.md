@@ -15,3 +15,4 @@ layout: default
 - [GTA 3 - Part I (SafeDisc v2.51)](/games/gta3)
 - [GTA 3 - Part II (CD-Checks)](/games/gta3_part2)
 - [Die Siedler (Settlers) IV (SafeDisc v2.10)](/games/siedler_iv)
+- [Stronghold (SafeDisc v2.40)](/games/stronghold)
