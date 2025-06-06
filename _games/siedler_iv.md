@@ -1,7 +1,7 @@
 ---
 layout: post
 author: OldGamesCracking
-title: "Die Siedler (Stellers) IV"
+title: "Die Siedler (Settlers) IV"
 date: 2025-05-31
 tags:
     - "Die Siedler IV"
