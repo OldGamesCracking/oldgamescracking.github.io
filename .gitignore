@@ -1,3 +1,8 @@
 assets/simple_injector/Release/
 assets/simple_injector/.vs/
 
+assets/safedisc/injector/dll_game/.vs/
+/assets/safedisc/injector/dll_game/dll_game/Release
+/assets/safedisc/injector/dll_worker/Release
+/assets/safedisc/injector/dll_worker/.vs
+/assets/safedisc/injector/dll_game/Release
