@@ -1,11 +1,14 @@
-; SafeDisc v2.30-2.51 Import Fixer
+; SafeDisc v2.30-2.60 Import Fixer
 ; Tested with x64dbg, Mar 15 2025
 ; Tested on:
 ;   Die Siedler IV (v2.30)
 ;   Stronghold (v2.40)
 ;   GTA 3 (v2.51)
+;   Stronghold Deluxe (v2.60)
 ; There should be no exceptions, so enable them to see if anything goes wrong
 ; Enable "No Script Timeout Warning"
+
+; -----------------------------------------------------------------------------
 
 ; Config
 $iat_start = ???
@@ -14,21 +17,37 @@ $iat_size = ???
 ; also the temporary SafeDisc
 $user_code_end = ???
 
-log "SafeDisc v2.30-2.51 Import Fixer started"
+; -----------------------------------------------------------------------------
+
+log "SafeDisc v2.30-2.60 Import Fixer started"
 
 bpc
 bphwc
 membpc
 
-$g_func_address = 0
+$g_proc_address = 0
 $g_thunk_address = 0
+$g_iat_temp = 0
+$g_calls_temp = 0
+$g_calls_temp_offset = 0
+$g_calls_temp_end = 0
+$g_call_from = 0
 
-$iat_start_org = $iat_start
 $code_base = mem.base(eip)
 $code_size = mem.size(eip)
 $code_end = $code_base + $code_size
 
-$iat_end = $iat_start + $iat_size
+$iat_start_org = $iat_start
+$iat_end_org = $iat_start_org + $iat_size
+
+call allocate_temp_iat
+
+$iat_offset_temp = $g_iat_temp - $iat_start
+$iat_start = $iat_start_org + $iat_offset_temp
+$iat_end = $iat_end_org + $iat_offset_temp
+
+$iat_start_store = $iat_start_org
+$iat_end_store = $iat_end_org
 
 $eip_org = eip
 $esp_org = esp
@@ -44,6 +63,7 @@ loop_until_all_fixed:
     $stuff_was_fixed = 0
 
 
+; -----------------------------------------------------------------------------
 ; Somewhat compareable to fix_encrypted_procs
 ; but it looks for more generic push/ret calls
 fix_push_ret:
@@ -150,6 +170,7 @@ next_push_ret:
     jmp loop_push_rets
 
 
+; -----------------------------------------------------------------------------
 ; Fixes all encrypted local procedures by finding the jump pads
 ; then letting the Resolver  decrypt the data, copying it to an
 ; allocated buffer, returning from the proc and copying back the buffer
@@ -241,7 +262,7 @@ check_enc_edi:
 fix_encrypted_procs_done:
     free $stolen_bytes_buffer
     free $jumppad_locations_buffer
-    jmp loop_until_all_fixed
+    jmp fix_register_jmp_lookup
 
 jumppads_found:
 
@@ -311,19 +332,107 @@ next_jumppad:
     jmp loop_jumppads
 
 
+; -----------------------------------------------------------------------------
+; Fixes register jumps with lookup
+fix_register_jmp_lookup:
+    ; mov eax ??; pop ecx; add eax, ecx; mov eax, [eax]; jmp eax
+    findmemall 0, B8????????5903C18B00FFE0, -1
+    cmp $RESULT, 0
+    je loop_until_all_fixed
+    cmp $RESULT, 1
+    je setup_register_jmp_lookup
+    error "Too many functions, improve script :("
+setup_register_jmp_lookup:
+    $inner_func_location = ref.addr(0)
+    ;log "inner function found at {p:$inner_func_location}"
+    ; Find corresponding CALL to the inner function
+    findmemall 0, E8, -1, user
+    $num_calls = $RESULT
+    $call_id = 0
+
+loop_register_jmp_lookup:
+    cmp $call_id, $num_calls
+    je loop_until_all_fixed
+    $call_location = ref.addr($call_id)
+    $call_offset = dword:[$call_location + 1]
+    $call_destination = $call_location + $call_offset + 5
+    cmp $call_destination, $inner_func_location
+    jne next_register_jmp_lookup
+    ; We found the setup (let's hope it's only one)
+    $setup_addr = $call_location - 2
+    ;log "setup starts at {p:$setup_addr}"
+    jmp find_setup_calls
+
+next_register_jmp_lookup:
+    $call_id += 1
+    jmp loop_register_jmp_lookup
+
+find_setup_calls:
+    ; Find corresponding CALL to the setup
+    findmemall 0, E8, -1, user
+    $num_calls = $RESULT
+    $call_id = 0
+
+loop_setup_calls:
+    cmp $call_id, $num_calls
+    je loop_until_all_fixed
+    $call_location = ref.addr($call_id)
+    $call_offset = dword:[$call_location + 1]
+    $call_destination = $call_location + $call_offset + 5
+    cmp $call_destination, $setup_addr
+    jne next_setup_call
+    
+    ;  Ignore the strange calls with a 'ret' in front of them
+    cmp byte:[$call_location - 1], 0xc3
+    je next_setup_call
+    
+    cmp byte:[$call_location - 3], 0xc2
+    je next_setup_call
+    
+    ; We found a call to the setup
+    eip = $call_location
+
+    ; single step until we land on a 'push ???' = start of stub
+find_stub:
+    call sti_safe
+    cmp byte:[eip], 0x68
+    jne find_stub
+    
+    ; Get the true destination of the CALL
+    call get_address_from_stub
+    cmp $g_proc_address, 0
+    je next_setup_call
+    
+    ;log "Lookup call at {p:$call_location} -> {p:$g_proc_address}"
+    
+    ; Patch call
+    $call_offset = $g_proc_address - $call_location - 5
+    dword:[$call_location + 1] = $call_offset
+    
+    $stuff_was_fixed = 1
+    
+    eip = $eip_org
+    esp = $esp_org
+
+next_setup_call:
+    $call_id += 1
+    jmp loop_setup_calls
+    
+
+
+; -----------------------------------------------------------------------------
 ; Fixes the intermodular calls by executing the Resolver
 ; and then placing the proc address in the IAT
-; or pointing the call to another tunk if the proc already
+; or pointing the call to another thunk if the proc already
 ; has it's own thunk
 fix_iat:
+
     esp = $esp_org
     eip = $eip_org
 
     cmp $iat_start, $iat_end
     je fix_jumps
     $target = dword:[$iat_start]
-
-    $address_bswapped = bswap($iat_start)
     
     cmp $target, 0
     je next_import
@@ -332,9 +441,8 @@ fix_iat:
     ; Check if reachable
     cmp mem.valid($target), 1
     jne next_import
-    
-    ; Clear the thunk slot for later
-    dword:[$iat_start] = 0
+
+    $address_bswapped = bswap($iat_start - $iat_offset_temp)
 
     ; Find CALLs to that stub
     ; findasm "call [0x{p:$iat_start}]", $code_base -> misses some
@@ -360,13 +468,13 @@ fix_iat:
         dword:[esp] = $call_from + dis.len($call_from)
         
         eip = $target
-        
+
         call get_and_store_address_from_stub
-        cmp $g_func_address, 0
-        je check_call_via_indirect_jmp
-    
-        ; Fix thunk address
-        dword:[$call_from + 2] = $g_thunk_address
+        cmp $g_proc_address, 0
+        je next_call_id
+
+        $g_call_from = $call_from + 2
+        call save_call_temp
 
     next_call_id:
         $call_id += 1
@@ -382,7 +490,8 @@ check_call_via_indirect_jmp:
         cmp $jmp_id, $jmp_count
         je check_call_via_register_eax 
         $jmp_from = ref.addr($jmp_id)
-        ;log "JMP from {p:$jmp_from}"
+
+        ;log "ind. JMP from {p:$jmp_from}"
 
         ; Put the return address on the stack
         esp -= 4
@@ -391,11 +500,11 @@ check_call_via_indirect_jmp:
         eip = $target
 
         call get_and_store_address_from_stub
-        cmp $g_func_address, 0
+        cmp $g_proc_address, 0
         je check_call_via_register_eax
-    
-        ; Fix thunk address
-        dword:[$jmp_from + 2] = $g_thunk_address
+
+        $g_call_from = $jmp_from + 2
+        call save_call_temp
 
     next_jmp_id:
         $jmp_id += 1
@@ -407,6 +516,7 @@ check_call_via_register_eax:
 
     $call_count = $RESULT
     $call_id = 0
+
     process_calls_via_register_eax:
         cmp $call_id, $call_count
         je check_call_via_register_ebx 
@@ -420,11 +530,11 @@ check_call_via_register_eax:
         eip = $target
         
         call get_and_store_address_from_stub
-        cmp $g_func_address, 0
+        cmp $g_proc_address, 0
         je check_call_via_register_ebx
-    
-        ; Fix thunk address
-        dword:[$mov_at + 2] = $g_thunk_address
+
+        $g_call_from = $mov_at + 2
+        call save_call_temp
 
         $call_id += 1
         jmp process_calls_via_register_eax
@@ -448,11 +558,11 @@ check_call_via_register_ebx:
         eip = $target
         
         call get_and_store_address_from_stub
-        cmp $g_func_address, 0
+        cmp $g_proc_address, 0
         je check_call_via_register_ecx
     
-        ; Fix thunk address
-        dword:[$mov_at + 2] = $g_thunk_address
+        $g_call_from = $mov_at + 2
+        call save_call_temp
 
         $call_id += 1
         jmp process_calls_via_register_ebx
@@ -476,11 +586,11 @@ check_call_via_register_ecx:
         eip = $target
         
         call get_and_store_address_from_stub
-        cmp $g_func_address, 0
+        cmp $g_proc_address, 0
         je check_call_via_register_edx
     
-        ; Fix thunk address
-        dword:[$mov_at + 2] = $g_thunk_address
+        $g_call_from = $mov_at + 2
+        call save_call_temp
 
         $call_id += 1
         jmp process_calls_via_register_ecx
@@ -504,11 +614,11 @@ check_call_via_register_edx:
         eip = $target
         
         call get_and_store_address_from_stub
-        cmp $g_func_address, 0
+        cmp $g_proc_address, 0
         je check_call_via_register_edi
     
-        ; Fix thunk address
-        dword:[$mov_at + 2] = $g_thunk_address
+        $g_call_from = $mov_at + 2
+        call save_call_temp
 
         $call_id += 1
         jmp process_calls_via_register_edx
@@ -532,11 +642,11 @@ check_call_via_register_edi:
         eip = $target
         
         call get_and_store_address_from_stub
-        cmp $g_func_address, 0
+        cmp $g_proc_address, 0
         je check_call_via_register_esi
     
-        ; Fix thunk address
-        dword:[$mov_at + 2] = $g_thunk_address
+        $g_call_from = $mov_at + 2
+        call save_call_temp
 
         $call_id += 1
         jmp process_calls_via_register_edi
@@ -560,11 +670,11 @@ check_call_via_register_esi:
         eip = $target
         
         call get_and_store_address_from_stub
-        cmp $g_func_address, 0
+        cmp $g_proc_address, 0
         je check_call_via_register_ebp
     
-        ; Fix thunk address
-        dword:[$mov_at + 2] = $g_thunk_address
+        $g_call_from = $mov_at + 2
+        call save_call_temp
 
         $call_id += 1
         jmp process_calls_via_register_esi
@@ -579,7 +689,7 @@ check_call_via_register_ebp:
         cmp $call_id, $call_count
         je next_import 
         $mov_at = ref.addr($call_id)
-        ;log "MOV EBP at {p:$mov_at}"
+        log "MOV EBP at {p:$mov_at}"
 
         ; Put the return address on the stack
         esp -= 4
@@ -588,11 +698,11 @@ check_call_via_register_ebp:
         eip = $target
         
         call get_and_store_address_from_stub
-        cmp $g_func_address, 0
+        cmp $g_proc_address, 0
         je next_import
     
-        ; Fix thunk address
-        dword:[$mov_at + 2] = $g_thunk_address
+        $g_call_from = $mov_at + 2
+        call save_call_temp
 
         $call_id += 1
         jmp process_calls_via_register_ebp
@@ -602,6 +712,7 @@ next_import:
     jmp fix_iat
 
 
+; -----------------------------------------------------------------------------
 ; Fixes the intermodular calls that are
 ; routed through a jump pad via finding
 ; all special stubs (with ret addr) via a pattern
@@ -631,17 +742,21 @@ loop_jumps:
     eip = $stub_addr
     call sti_safe
     call get_and_store_address_from_stub
-    cmp $g_func_address, 0
+    cmp $g_proc_address, 0
     je next_jump
     
     ; Replace jump by call
     asm $org_addr, "call [0x{p:$g_thunk_address}]"
+
+    $g_call_from = $org_addr + 2
+    call save_call_temp
 
 next_jump:
     $jump_id += 1
     jmp loop_jumps
 
 
+; -----------------------------------------------------------------------------
 ; Shared subroutine to reconstruct stolen bytes
 ; for fix_encrypted_procs and fix_push_ret
 shared_get_stolen_bytes:
@@ -694,16 +809,17 @@ copy_remaining:
     ret
 
 
+; -----------------------------------------------------------------------------
 ; We need to be at the start of the stub
-; The address will be returned via the global $g_func_address
+; The address will be returned via the global $g_proc_address
 ; Will be zero if an error occurs
 get_address_from_stub:
     $esp_org_stub = esp
-    $g_func_address = 0
+    $g_proc_address = 0
+
     $ret_addr = dword:[esp]
     call sti_safe
     call sti_safe
-    ; Place HW BP on stack so we break right in function later
     $hw_bp = esp
     bphws $hw_bp, r
     SetHardwareBreakpointSilent $hw_bp, 1
@@ -712,15 +828,18 @@ get_address_from_stub:
     
     ; Check that we really arrived at the function
     cmp dword:[esp+4], $ret_addr
-    jne die
+    je stub_ok
+    jmp die
 
-    $g_func_address = dword:[esp]
+stub_ok:
+    $g_proc_address = dword:[esp]
 
     ; Eat up the return address
     esp = $esp_org_stub + 4
     ret
 
 
+; -----------------------------------------------------------------------------
 ; This is basically a complicated 'sti' since x32dbg sometimes swallows an 
 ; sti right after eip has changed (or something like that)
 sti_safe:
@@ -735,18 +854,61 @@ sti_performed:
     ret
 
 
-; stores the address in $g_func_address to the IAT
-; iat thunk address is returned via $g_thunk_address
+; -----------------------------------------------------------------------------
+; Stores the address in $g_proc_address to the IAT
+; The IAT thunk address is returned via $g_thunk_address
 store_in_iat:
     ; Do we have this thunk already?
-    $search_iat_start = $iat_start_org
-    $search_iat_end = $search_iat_start + $iat_size
+    call get_iat_slot
+    cmp $g_thunk_address, 0
+    je perform_store_in_iat
+    ret
+    
+perform_store_in_iat:
+    call get_free_iat_slot
+    cmp $g_thunk_address, 0
+    je iat_full
+    dword:[$g_thunk_address] = $g_proc_address	
+    ret
+
+
+; -----------------------------------------------------------------------------
+; Remembers a call in the $g_calls_temp buffer
+save_call_temp:
+    cmp $g_calls_temp_offset, $g_calls_temp_end
+    je iat_full
+    dword:[$g_calls_temp_offset] = $g_call_from
+    dword:[$g_calls_temp_offset + 4] = $g_thunk_address
+    $g_calls_temp_offset += 8
+    dword:[$g_call_from] = 0
+    ret
+
+
+; -----------------------------------------------------------------------------
+; Writes all the saved calls/jmps back to their locations
+write_back_saved_calls:
+    cmp $g_calls_temp_offset, $g_calls_temp
+    jbe write_back_done
+    $g_calls_temp_offset -= 8
+    dword:[dword:[$g_calls_temp_offset]] = dword:[$g_calls_temp_offset + 4]
+    jmp write_back_saved_calls
+write_back_done:
+    ret
+
+
+; -----------------------------------------------------------------------------
+; Returns the address of the IAT slot in $g_thunk_address
+; for a given proc address in $g_proc_address
+; If it can not be found, 0 is returned
+get_iat_slot:
+    $search_iat_start = $iat_start_store
+    $search_iat_end = $iat_end_store
 
     search_thunk:
         cmp $search_iat_start, $search_iat_end
         je thunk_not_found
 
-        cmp dword:[$search_iat_start], $g_func_address
+        cmp dword:[$search_iat_start], $g_proc_address
         jne next_thunk
         $g_thunk_address = $search_iat_start
         ret
@@ -756,34 +918,91 @@ store_in_iat:
         jmp search_thunk
 
     thunk_not_found:
-    
+        $g_thunk_address = 0
+        ret
+
+
+; -----------------------------------------------------------------------------
+; Returns the address of the next free IAT slot in $g_thunk_address
+; If not free slot is available, 0 is returned
+get_free_iat_slot:
     ; Search for an empty slot
-    $search_iat_start = $iat_start_org
-    $search_iat_end = $search_iat_start + $iat_size
+    $search_iat_start = $iat_start_store
+    $search_iat_end = $iat_end_store
 
     search_empty_slot:
         cmp $search_iat_start, $search_iat_end
-        je die
+        je no_free_slot
 
         cmp dword:[$search_iat_start], 0
         jne next_slot
-        dword:[$search_iat_start] = $g_func_address
         $g_thunk_address = $search_iat_start
         ret
 
     next_slot:
         $search_iat_start += 4
         jmp search_empty_slot
+    
+    no_free_slot:
+        $g_thunk_address = 0
+        ret
 
 
+; -----------------------------------------------------------------------------
 ; Combination of get_address_from_stub + store_in_iat
 get_and_store_address_from_stub:
     call get_address_from_stub
-    cmp $g_func_address, 0
+    cmp $g_proc_address, 0
     je get_and_store_address_from_stub_done
     call store_in_iat
 get_and_store_address_from_stub_done:
     ret
+
+
+; -----------------------------------------------------------------------------
+; Allocates a temporary IAT
+allocate_temp_iat:
+    alloc $iat_size
+    cmp $RESULT, 0
+    je die
+    $g_iat_temp = $RESULT
+
+    ; max 100 calls per entry
+    $calls_temp_size = $iat_size * 100 * 8
+    alloc $calls_temp_size
+    cmp $RESULT, 0
+    je die
+    $g_calls_temp = $RESULT
+    $g_calls_temp_offset = $g_calls_temp
+    $g_calls_temp_end = $g_calls_temp + $calls_temp_size
+
+    $iat_slot_addr = $iat_start_org
+    $iat_slot_addr_temp = $g_iat_temp
+
+temp_iat_loop:
+    cmp $iat_slot_addr, $iat_end_org
+    je temp_iat_done
+    ; Copy entry
+    dword:[$iat_slot_addr_temp] = dword:[$iat_slot_addr]
+
+    cmp dword:[$iat_slot_addr], $user_code_end
+    ja non_broken_entry
+    dword:[$iat_slot_addr] = 0
+
+non_broken_entry:
+    $iat_slot_addr += 4
+    iat_slot_addr_temp += 4
+    jmp temp_iat_loop
+
+temp_iat_done:
+    ret
+
+
+; -----------------------------------------------------------------------------
+
+
+iat_full:
+    error "IAT full"
 
 
 die:
@@ -791,6 +1010,17 @@ die:
 
 
 end:
+    call write_back_saved_calls
+    cmp $g_iat_temp, 0
+    je no_temp_iat
+    free $g_iat_temp
+    $g_iat_temp = 0
+no_temp_iat:
+    cmp $g_calls_temp, 0
+    je no_temp_calls
+    free $g_calls_temp
+    $g_calls_temp = 0
+no_temp_calls:
     esp = $esp_org
     eip = $eip_org
     log "Done ;)"
