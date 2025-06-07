@@ -13,7 +13,7 @@ tags:
 
 ## Game Specs
 
-| Name | Stronghold |
+| Name | Stronghold Deluxe |
 | ------------- | ------------- |
 | Release-Date | 06/2002 |
 | Redump ID | [44042](http://redump.org/disc/44042/) |
@@ -43,7 +43,7 @@ tags:
 # How to Crack
 
 Looking through my game collection, I discovered that Stronghold Deluxe - a kind of expansion pack to the original version - has the version 2.60 of SafeDisc installed.
-So it feld natural to have a look at that next.<br>
+So it felt natural to have a look at that next.<br>
 
 Starting from this version onwards, SafeDisc gets somewhat trickier. We will see, if we can tackle all aspects of the protection.<br>
 
@@ -54,7 +54,7 @@ So, lets put a breakpoint on _WaitForSingleObject_ - we will see in a short mome
 
 ![Scylla Options]({{site.url}}/assets/stronghold_deluxe/scylla.png)
 
-The following script is what I ended up with:
+The following script is what I ended up with to break on WaitForSingleObject:
 
 ```asm
 bpc
@@ -220,7 +220,7 @@ At first I thought I had missed something or my script decrypted something not p
 Remember when I said that the game.exe starts another process (debugger.exe)? Initially I thought that it was only there to stop us from reaching the OEP, but it turns out that it is a much larger part of the protection scheme and observes/controls the game the whole time. The idea is as follows:<br>
 
 - When the game is wrapped in the SafeDisc protection, a few bytes of the original instructions are 'stolen' and are then replaced with opcodes that will trigger an exception (INT3, UD2, ...).
-- The original instructions are placed somewhere in the debugger in a lookup table (probably heavily encrypted and shit).
+- The original instructions are placed somewhere in the debugger.exe in a lookup table (probably heavily encrypted and shit).
 - The debugger.exe attaches to the game and waits for it to trigger such an exception.
 - It then looks up the original instruction and a) places it back in the game.exe or b) emulates the instruction by altering the thread context.
 
@@ -352,4 +352,4 @@ We now have everything to fully fix the game. The patchfile is in the %temp% fol
 
 As always, you can find the version of the script used for this article [here](https://github.com/OldGamesCracking/oldgamescracking.github.io/blob/1bdba092386a51428ea6ab320d8d494381d1e5ec/assets/safedisc/safedisc_import_fixer.txt).<br>
 
-For anyone playing along at home, [this](assets/stronghold_deluxe/restored_bytes.1337) was the patchfile I ended up with.
+For anyone playing along at home, [this](https://github.com/OldGamesCracking/oldgamescracking.github.io/blob/495113741d7c451ac9436ffc6c6572b16c773098/assets/stronghold_deluxe/restored_bytes.1337) was the patchfile I ended up with.
