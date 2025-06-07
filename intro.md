@@ -16,7 +16,7 @@ to address the second there are multiple ways:<br>
 * Find a No-CD-Crack.
 * Write your very own Crack.
 
-For most peoply dumping the disc to preserve the original copy and/or acquiring a downloadable version is probably the best solution.
+For most people dumping the disc to preserve the original copy and/or acquiring a downloadable version is probably the best solution.
 But, as you might have already guessed, I'm interested in the last option: Writing a crack myself ;)<br>
 
 _Why?_, you might ask. Well, there are many good reasons.<br>
@@ -37,4 +37,4 @@ Please keep in mind that:
 * I will not provide the cracked files.
 * I only crack games of which I own the physical copy at the time of writing.
 
-And always remember the ancient words: _"Support the software developers, if you like the game, buy it"_ - ideally from a local flea market ;)
+And always remember the ancient words: _"Support the software developers, if you like the game, buy it"_ - ideally from a local flea market ;)<br><br>
