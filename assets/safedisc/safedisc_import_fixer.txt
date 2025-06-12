@@ -1,13 +1,14 @@
-; SafeDisc v2.30-2.60 Import Fixer
+; SafeDisc v1.40-2.60 Import Fixer
 ; Tested with x64dbg, Mar 15 2025
 ; Tested on:
+;   The Sims (v1.40)
 ;   Die Siedler IV (v2.30)
 ;   Stronghold (v2.40)
 ;   GTA 3 (v2.51)
 ;   Stronghold Deluxe (v2.60)
 ; There should be no exceptions, so enable them to see if anything goes wrong
 ; Enable "No Script Timeout Warning"
-
+; Script can run for multiple minutes, so be patient ;)
 ; -----------------------------------------------------------------------------
 
 ; Config
@@ -19,7 +20,7 @@ $user_code_end = ???
 
 ; -----------------------------------------------------------------------------
 
-log "SafeDisc v2.30-2.60 Import Fixer started"
+log "SafeDisc v1.40-2.60 Import Fixer started"
 
 bpc
 bphwc
@@ -533,7 +534,7 @@ check_call_via_register_eax:
         cmp $g_proc_address, 0
         je check_call_via_register_ebx
 
-        $g_call_from = $mov_at + 2
+        $g_call_from = $mov_at + 1
         call save_call_temp
 
         $call_id += 1
@@ -825,6 +826,8 @@ get_address_from_stub:
     SetHardwareBreakpointSilent $hw_bp, 1
     run
     bphwc $hw_bp
+
+    call rtr_safe
     
     ; Check that we really arrived at the function
     cmp dword:[esp+4], $ret_addr
@@ -845,12 +848,22 @@ stub_ok:
 sti_safe:
     $eip_initial = eip
 perform_sti:
-    ; step in as long as we are on a ret (hack)
     cmp $eip_initial, eip
     jne sti_performed
     sti
     jmp perform_sti
 sti_performed:
+    ret
+
+
+; -----------------------------------------------------------------------------
+; This is basically a complicated 'rtr' since the real command did not work
+rtr_safe:
+    cmp byte:[eip], 0xC3
+    je rtr_performed
+    sto
+    jmp rtr_safe
+rtr_performed:
     ret
 
 
