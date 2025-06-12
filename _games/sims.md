@@ -2,7 +2,7 @@
 layout: post
 author: OldGamesCracking
 title: "Die Sims"
-date: 2025-06-xx
+date: 2025-06-13
 tags:
     - "Sims"
     - "The Sims"
