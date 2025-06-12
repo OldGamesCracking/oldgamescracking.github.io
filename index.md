@@ -18,3 +18,4 @@ layout: default
 - [Stronghold (SafeDisc v2.40)](/games/stronghold)
 - [Stronghold Deluxe (SafeDisc v2.60)](/games/stronghold_deluxe)
 - [MotoGP 2 (Bitpool)](/games/motogp_2)
+- [Robin Hood (Sysiphus)](/games/robin_hood)
