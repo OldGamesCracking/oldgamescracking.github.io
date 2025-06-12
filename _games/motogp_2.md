@@ -46,7 +46,7 @@ If we start the game via the _motogp2.exe_ without the CD inserted, we instantly
 
 ![CD Check]({{site.url}}/assets/motogp_2/cd.png)
 
-This is nice since - judging by the speed the messagebox popped up - it means that usually the check is quite simple. Time to start attach the debugger and have a look around:
+This is nice since - judging by the speed the messagebox popped up - it means that usually the check is quite simple. Time to attach the debugger and have a look around:
 
 ![Message Box]({{site.url}}/assets/motogp_2/messagebox.png)
 
@@ -71,4 +71,4 @@ Well, why not change the path to the same as _InstallPath_? That works surprisin
 
 That means we do not have to change the game.exe at all. Just copy the _elf.42_ file to the installdir and change _CDPath_ to the same as _InstallPath_.<br><br>
 
-By the way, the _elf.42_ file is actually 1:1 the same as motogp2.exe, just with a changed name.
+By the way, the _elf.42_ file is actually 1:1 the same as motogp2.exe, just with a changed name.<br><br>
