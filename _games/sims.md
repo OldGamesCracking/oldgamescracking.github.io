@@ -90,7 +90,7 @@ The stubs used to hide the imports look kinda like the ones from GTA 2, but they
 
 The _JMP_ after isn't actually executed, probably a leftover from the last version to fool us. We use the "Hardware Breakpoint on ESP after pushfd" trick here to get to the end of the stub. We actually need to execute a few _STO_ to really get to the end of the stub but that's the main differecen here. Also I found a few "MOV REG [ADDR], CALL REG" combinations. So I decided to modify my SafeDisc v2 script to now also support v1.40.
 
-As always: [the unpacking script (At the time of writing this article)](https://github.com/OldGamesCracking/oldgamescracking.github.io/blob/ea0a33b08e53aef5a7df1898101db537168e5415/assets/safedisc/safedisc_import_fixer.txt)<br>
+As always: [the unpacking script (At the time of writing this article)](https://github.com/OldGamesCracking/oldgamescracking.github.io/blob/666d33a0ecf176e6ac1f44e65e68ff75555fcd15/assets/safedisc/safedisc_import_fixer.txt)<br>
 
 That's it, there seems to be no additional CD-Checks and the game runs kinda ok on Win 10 besides that we have no audio at all, let's see if we can fix that.<br>
 With the CD inserted, we have audio back, but that's not what we want :)<br><br>
