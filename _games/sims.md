@@ -92,6 +92,14 @@ The _JMP_ after isn't actually executed, probably a leftover from the last versi
 
 As always: [the unpacking script (At the time of writing this article)](https://github.com/OldGamesCracking/oldgamescracking.github.io/blob/666d33a0ecf176e6ac1f44e65e68ff75555fcd15/assets/safedisc/safedisc_import_fixer.txt)<br>
 
+The settings are:
+
+```
+$iat_start = 0x005B6000
+$iat_size = 0x0000042C
+$user_code_end = 0x5D090000
+```
+
 That's it, there seems to be no additional CD-Checks and the game runs kinda ok on Win 10 besides that we have no audio at all, let's see if we can fix that.<br>
 With the CD inserted, we have audio back, but that's not what we want :)<br><br>
 After a short search we land on this bit:
