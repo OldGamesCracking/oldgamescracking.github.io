@@ -86,7 +86,7 @@ end:
 
 The stubs used to hide the imports look kinda like the ones from GTA 2, but they are deceiving:
 
-![Stub]({{site.url}}/assets/sims/stubs.png)
+![Stub]({{site.url}}/assets/sims/stub.png)
 
 The _JMP_ after isn't actually executed, probably a leftover from the last version to fool us. We use the "Hardware Breakpoint on ESP after pushfd" trick here to get to the end of the stub. We actually need to execute a few _STO_ to really get to the end of the stub but that's the main differecen here. Also I found a few "MOV REG [ADDR], CALL REG" combinations. So I decided to modify my SafeDisc v2 script to now also support v1.40.
 
