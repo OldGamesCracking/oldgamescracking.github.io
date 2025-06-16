@@ -20,3 +20,4 @@ layout: default
 - [MotoGP 2 (Bitpool)](/games/motogp_2)
 - [Robin Hood (Sysiphus)](/games/robin_hood)
 - [The Sims (SafeDisc v1.40)](/games/sims)
+- [Zoo Tycoon 2 (SmartE)](/games/zoo_tycoon_2)
