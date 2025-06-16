@@ -51,12 +51,12 @@ What I did then was to figure out the place where the loader code transitions to
 
 ![OEP]({{site.url}}/assets/zoo_tycoon_2/oep.png)
 
-The two other intermodular function calls (_GetVersionExA_ and _GetModuleHandleA_) gave me the confirmation that we were indeed just a few lines past the OEP and that the actual OEP must be at 0x006C3781. The question was now, how can we reach it? Simply putting a HW BP there did not seemed to do the trick. After a bit of fiddling around, I realized that - contrary to my initial believes - there is actually an anti-debugging mechanism in place that kills the HW Breakpoints. Checking the Scylla options _KiUserExceptionDispatcher_ and _NtContinue_ is enough to make the program break on the OEP. The corresponding SEH where the breakpoints are killed is here:
+The two other intermodular function calls (_GetVersionExA_ and _GetModuleHandleA_) gave me the confirmation that we were indeed just a few lines past the OEP and that the actual OEP must be at 0x006C3781. The question was now, how can we reach it? Simply putting a HW BP there did not seemed to do the trick. After a bit of fiddling around, I realized that - contrary to my initial believes - there is actually an anti-debugging mechanism in place that kills the HW Breakpoints. Checking the ScyllaHide options _KiUserExceptionDispatcher_ and _NtContinue_ is enough to make the program break on the OEP. The corresponding SEH where the breakpoints are killed is here:
 
 ![SEH]({{site.url}}/assets/zoo_tycoon_2/seh.png)
 
-Now that we know where the OEP is, let's put a HW BP there, restart the program and break right on the OEP ;) From here we can directly use Scylla to dump the game and restore the IAT, there are no scrambled imports. For me, two imports were replaced with stubs from _aclayers.dll_. Scylla can not reconstruct these imports. Luckily there are debug strings that we can use to get the original functions:
+Now that we know where the OEP is, let's put a HW BP there, restart the program and break right on the OEP ;) From here we can directly use Scylla to dump the game and restore the IAT, there are no scrambled imports. For me, two imports were replaced with stubs from _aclayers.dll_. Scylla can not reconstruct these imports. Luckily there are debug strings that we can use to get the original functions and fix them manually:
 
 ![aclayers]({{site.url}}/assets/zoo_tycoon_2/aclayers.png)
 
-That's it. I hope there are no late checks in the game, but upon playing for a few minuted, I could not find anything unusual.<br><br>
+That's it. I hope there are no late checks in the game, but upon playing for a few minutes, I could not find anything unusual.<br><br>
