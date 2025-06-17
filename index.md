@@ -21,3 +21,4 @@ layout: default
 - [Robin Hood (Sysiphus)](/games/robin_hood)
 - [The Sims (SafeDisc v1.40)](/games/sims)
 - [Zoo Tycoon 2 (SmartE)](/games/zoo_tycoon_2)
+- [RollerCoaster Tycoon 2 (SecuROM 4.83.11)](/games/rollercoaster_tycoon_2)
