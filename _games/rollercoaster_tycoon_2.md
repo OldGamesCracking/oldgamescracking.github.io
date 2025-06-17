@@ -85,8 +85,7 @@ Simply put a HW BP on the top stack element once the _PUSH EBP_ is executed. The
 - Go through the original IAT and check if the address is already known
 - If so, point the CALL to the known thunk, if not, create a new one
 
-```asm
-{include} /assets/rollercoaster_tycoon_2/import_fixer.txt
+```{include} assets/rollercoaster_tycoon_2/import_fixer.txt
 ```
 
 If you've read the script thoroughly, you should have realized that the main trick here was to reconstruct the CALLs not in a linear fashion, but in an 'arbitrary' pattern since the stub seems to detect such a scenario, also going through the CALLs in reverse order will be detected by SecuROM and the resolved addresses get messed up. I ended up with a solution where I alternate between one CALL after the OEP then one CALL before the OEP. Luca D'Amico also wrote a [script](https://github.com/x64dbg/Scripts/pull/25) that we could have used. His script goes through the CALLs in chunks which also seems to work.<br><br>
