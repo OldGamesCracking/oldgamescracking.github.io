@@ -22,3 +22,4 @@ layout: default
 - [The Sims (SafeDisc v1.40)](/games/sims)
 - [Zoo Tycoon 2 (SmartE)](/games/zoo_tycoon_2)
 - [RollerCoaster Tycoon 2 (SecuROM 4.83.11)](/games/rollercoaster_tycoon_2)
+- [GTA: Vice City (SecuROM 4.84.69)](/games/gta_vice_city)
