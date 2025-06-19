@@ -86,6 +86,8 @@ So how can we fix this? Well, we could recompile Scylla with a larger value, but
 00026E65:04->10
 ```
 
+Patches are for v0.9.8<br>
+
 With that out of the way we can finally dump the game.exe and have basically defeated SecuROM once again.
 
 
