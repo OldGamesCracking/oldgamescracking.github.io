@@ -102,7 +102,7 @@ If you would like to create a real No-CD-Crack, we can use the same trick from G
 Well, that's easy isn't it?
 
 - Change 'C' to a '.'
-- Change ':\' to '\'
+- Change ':\\' to '\\'
 - Patch the JMP
 - Don't forget to copy all Audio files from disc to  the install dir
 
