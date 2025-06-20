@@ -1,0 +1,324 @@
+; Import fixer for SecuROM v5
+; Tested with Colin McRae Rally 04 (SecuROM 5.03.04)
+; Make sure to be at the OEP
+$iat_start = 0x0056A000
+$iat_size = 0x2C0
+; Start of .geso
+$securom_start = 0xAF1000
+; .geso + .bgxb
+$securom_size = 0xC4000 + 0xFF000
+
+
+$iat_end = $iat_start + $iat_size
+$securom_end = $securom_start + $securom_size
+$txt_base = mem.base(eip)
+$txt_size = mem.size($txt_base)
+$txt_end = $txt_base + $txt_size
+
+$eip_org = eip
+$esp_org = esp
+
+; Find all intermodular calls
+setmaxfindresult 1000000
+findmemall 0, FF15????????, -1, user
+$num_calls = $RESULT
+
+; Find CALL-ID that is closest to the OEP
+$call_id = 0xffffffff
+find_next_call:
+	$call_id += 1
+    $call_at = ref.addr($call_id)
+    cmp $call_at, $eip_org
+    ja first_call_found
+    jmp find_next_call
+first_call_found:
+	; Check that thunk is in SecuROM section
+	$thunk_addr = dword:[$call_at+2]
+	cmp $thunk_addr, $securom_start
+	jb find_next_call
+	cmp $thunk_addr, $securom_end
+	jae find_next_call
+
+    $call_id_offset = 0
+    $offset_positive = 1
+
+loop:
+    cmp $call_id_offset, $num_calls
+    jae repair_relative_calls
+
+    cmp $offset_positive, 1
+    je add_offset
+
+subtract_offset:
+    cmp $call_id_offset, $call_id
+    ja next_call
+    $call_id_adjusted = $call_id - $call_id_offset
+    jmp get_call
+
+add_offset:
+    $call_id_adjusted = $call_id + $call_id_offset
+    cmp $call_id_adjusted, $num_calls
+    jae next_call
+
+get_call:
+    $call_at = ref.addr($call_id_adjusted)
+
+    cmp $call_at, $txt_base
+    jb next_call
+    cmp $call_at, $txt_end
+    jae next_call
+	
+	; Check that thunk is in SecuROM section
+	$thunk_addr = dword:[$call_at+2]
+	cmp $thunk_addr, $securom_start
+	jb next_call
+	cmp $thunk_addr, $securom_end
+	jae next_call
+	
+    esp = $esp_org
+    eip = $call_at
+    
+    call store_func
+
+next_call:
+    ; flip
+    $offset_positive = 1 - $offset_positive
+    cmp $offset_positive, 0
+    jne loop
+    $call_id_offset += 1
+    jmp loop
+	
+
+repair_relative_calls:
+findmemall 0, ??E8??????00, -1, user
+$num_calls = $RESULT
+
+; Find CALL-ID that is closest to the OEP
+$call_id = 0xffffffff
+find_next_call_rel:
+	$call_id += 1
+    $call_at = ref.addr($call_id)
+    cmp $call_at, $eip_org
+    ja first_call_found_rel
+    jmp find_next_call_rel
+first_call_found_rel:
+	; Check that target is in SecuROM section
+	$target_addr = $call_at + 1 + 5 + dword:[$call_at+2]
+	cmp $target_addr, $securom_start
+	jb find_next_call_rel
+	cmp $target_addr, $securom_end
+	jae find_next_call_rel
+	; Check that we have a PUSH EBP there
+	cmp byte:[$target_addr], 0x55
+	jne find_next_call_rel
+
+    $call_id_offset = 0
+    $offset_positive = 1
+
+loop_rel:
+    cmp $call_id_offset, $num_calls
+    jae end
+
+    cmp $offset_positive, 1
+    je add_offset_rel
+
+subtract_offset_rel:
+    cmp $call_id_offset, $call_id
+    ja next_call_rel
+    $call_id_adjusted = $call_id - $call_id_offset
+    jmp get_call_rel
+
+add_offset_rel:
+    $call_id_adjusted = $call_id + $call_id_offset
+    cmp $call_id_adjusted, $num_calls
+    jae next_call_rel
+
+get_call_rel:
+    $call_at = ref.addr($call_id_adjusted)
+
+    cmp $call_at, $txt_base
+    jb next_call_rel
+    cmp $call_at, $txt_end
+    jae next_call_rel
+	
+	; Check that target is in SecuROM section
+	$target_addr = $call_at + 1 + 5 + dword:[$call_at+2]
+	cmp $target_addr, $securom_start
+	jb next_call_rel
+	cmp $target_addr, $securom_end
+	jae next_call_rel
+	; Check that we have a PUSH EBP there
+	cmp byte:[$target_addr], 0x55
+	jne next_call_rel
+	
+	esp = $esp_org
+    eip = $call_at + 1
+	
+	log "Call at {p:$call_at}"
+	
+	; Check if the stuffed byte is actually after the call (preceeding PUSH/POP)
+	$inst_prev_addr = dis.prev($call_at + 1)
+	$inst_prev_len = dis.len($inst_prev_addr)
+	$inst_next_addr = dis.next($call_at + 1)
+	$inst_next_len = dis.len($inst_next_addr)
+	
+	$is_push = stristr(dis.text($inst_prev_addr), "push")
+	cmp $is_push, 0
+	jne stuffed_after
+	
+	$is_push = stristr(dis.text($inst_next_addr), "push")
+	cmp $is_push, 0
+	jne stuffed_before
+	
+	$is_pop = stristr(dis.text($inst_prev_addr), "pop")
+	cmp $is_pop, 0
+	jne stuffed_after
+	
+	$is_pop = stristr(dis.text($inst_next_addr), "pop")
+	cmp $is_pop, 0
+	jne stuffed_before
+	
+	cmp $inst_prev_len, 1
+	jne check_stuffed_after
+	cmp $inst_next_len, 1
+	jne stuffed_before
+	jmp die
+	
+check_stuffed_after:
+	cmp $inst_next_len, 1
+	je stuffed_after
+	jmp die
+
+stuffed_after:
+	$call_at += 1
+
+stuffed_before:
+
+    call store_func
+
+next_call_rel:
+    ; flip
+    $offset_positive = 1 - $offset_positive
+    cmp $offset_positive, 0
+    jne loop_rel
+    $call_id_offset += 1
+    jmp loop_rel
+	
+	
+; -----------------------------------------------------------------------------
+store_func:
+
+	call sti_safe
+    
+	; Check that we are on a PUSH EBP
+	cmp byte:[eip], 0x55
+	jne die
+	
+	call sti_safe
+	
+    $stack_top = esp
+break_on_restore_ebp:
+    bphws $stack_top, r, 4
+    SetHardwareBreakpointSilent $stack_top
+    erun
+	
+	bphwc $stack_top
+
+	; Check if we are on a JMP EAX
+	cmp word:[eip], 0xe0ff
+	jne check_xchg
+	$func_addr = eax
+	jmp found_func
+
+check_xchg:
+	; Check if we are on a XCHG EBP, EAX
+	cmp byte:[eip], 0x95
+	jne check_mov_eax
+	call rtr_safe
+    $func_addr = dword:[esp]
+	jmp found_func
+	
+check_mov_eax:
+	; Check if we are on a MOV EAX, DS:[EAX]
+	cmp word:[eip], 0x008B
+	jne check_mov_edi
+	call sti_safe
+	$func_addr = eax
+	jmp found_func
+
+check_mov_edi:
+	; Check if we are on a MOV [EDI], EAX
+	cmp word:[eip], 0x0789
+	jne check_ret
+	; renew the breakpoint and try again
+	$stack_top = edi
+	call sti_safe
+	jmp break_on_restore_ebp
+
+check_ret:
+	; Check if we are on a RET
+	cmp byte:[eip], 0xC3
+	jne die
+	$func_addr = dword:[esp]
+
+found_func:
+    ; Check if we know that address already
+    $thunk_check = $iat_start
+find_used_thunk:
+    cmp $thunk_check, $iat_end
+    je find_empty_thunk_init
+    cmp dword:[$thunk_check], $func_addr
+    je thunk_found
+    $thunk_check += 4
+    jmp find_used_thunk
+
+find_empty_thunk_init:
+    $thunk_check = $iat_start
+find_empty_thunk:
+    cmp dword:[$thunk_check], 0
+    je empty_thunk_found
+    $thunk_check += 4
+    jmp find_empty_thunk
+
+empty_thunk_found:
+    dword:[$thunk_check] = $func_addr
+thunk_found:
+	; Repair call
+	word:[$call_at] = 0x15FF 
+    dword:[$call_at + 2] = $thunk_check
+	
+	ret
+
+
+; -----------------------------------------------------------------------------
+; This is basically a complicated 'sti' since x32dbg sometimes swallows an 
+; sti right after eip has changed (or something like that)
+sti_safe:
+    $eip_initial = eip
+perform_sti:
+    cmp $eip_initial, eip
+    jne sti_performed
+    sti
+    jmp perform_sti
+sti_performed:
+    ret
+	
+
+; -----------------------------------------------------------------------------
+; This is basically a complicated 'rtr' since the real command did not work
+rtr_safe:
+    cmp byte:[eip], 0xC3
+    je rtr_performed
+    sto
+    jmp rtr_safe
+rtr_performed:
+    ret
+
+
+die:
+	error "Something went wrong"
+
+end:
+    eip = $eip_org
+    esp = $esp_org
+    log "Done ;)"

@@ -23,3 +23,4 @@ layout: default
 - [Zoo Tycoon 2 (SmartE)](/games/zoo_tycoon_2)
 - [RollerCoaster Tycoon 2 (SecuROM 4.83.11)](/games/rollercoaster_tycoon_2)
 - [GTA: Vice City (SecuROM 4.84.69)](/games/gta_vice_city)
+- [Colin McRae Rally 04 (SecuROM 5.03.04)](/games/colin_mcrae_rally_04)
