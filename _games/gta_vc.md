@@ -63,3 +63,29 @@ _What's that about_ you might ask. Well, I asked myself the same question and tr
 So, if the DOS stub is larger than 0x300 bytes, Scylla will simply fail to parse the file properly. Having a look into the game.exe we see that 0x800 bytes of junk data have been added to the DOS stub. Probably as a means to fool dumping tools:
 
 ![Junk data]({{site.url}}/assets/gta_vice_city/stuff.png)
+
+So how can we fix this? Well, we could recompile Scylla with a larger value, but I was too lazy for that. So I went with the much simpler solution: Patching the exe. Luckily the used buffer is created on the fly so we can change the size without a problem. I spare you with the details, with the following patches the buffer will be 0x1000 bytes instead of 0x448:
+
+```
+>scylla_x86.exe
+00026CD6:48->00
+00026CD7:04->10
+00026CEB:48->00
+00026CEC:04->10
+00026CFF:48->00
+00026D00:04->10
+00026D3A:48->00
+00026D3B:04->10
+00026D8C:48->00
+00026D8D:04->10
+00026E0F:48->00
+00026E10:04->10
+00026E27:48->00
+00026E28:04->10
+00026E64:48->00
+00026E65:04->10
+```
+
+Patches are for v0.9.8<br>
+
+With that out of the way we can finally dump the game.exe and have basically defeated SecuROM once again.
