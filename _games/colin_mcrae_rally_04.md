@@ -43,7 +43,7 @@ Not much has changed OEP-wise in this version of SecuROM. We can still find the 
 
 The thunks for these calls are all within the _.bgxb_ section, but the stubs itself are spread all over the place. In order to fix them, let's modify the script from the previous articles to perform the following algorithm:
 
-- Search for all CALLs having a thuk in the _.bgxb_ section
+- Search for all CALLs having a thunk in the _.bgxb_ section
 - Find the next CALL after the OEP
 - Repair them in alternating fashion (see RCT2 article for that)
 
@@ -59,7 +59,7 @@ This is the one we know already. It ends in a _JMP EAX_ and we can simply read t
 
 ![Type 2]({{site.url}}/assets/colin_mcrae_rally_04/type_2.png)
 
-This one pops the value of EBP into EAX and then performs a _XCHG EBP, EAX_. We can get address via single-stepping until we land on a _RET_.
+This one pops the value of EBP into EAX and then performs a _XCHG EBP, EAX_. We can get the address via single-stepping until we land on a _RET_.
 
 ### Type 3
 
@@ -77,7 +77,7 @@ In this type the values on the stack are re-organized thats why our breakpoint t
 
 Just a simple return, so the real address of the remote proc is on the stack and we can simply grab it.<br><br>
 
-So far, so good. So nothing special, just a few extra lines for our script. But when I tried to run the dumped game.exe it wouldn't start. Upon closer inspection I realized that some of the indirect CALLS (_FF 15_) had been replaced by relative CALLS (_E8_) to a stub within the _.geso_ section. The additional byte was replaced with a _NOP_ or other 1-byte instructions that have no effect in the context of the call:
+So far, so good. Nothing special, just a few extra lines for our script. But when I tried to run the dumped game.exe it wouldn't start. Upon closer inspection I realized that some of the indirect CALLS (_FF 15_) had been replaced by relative CALLS (_E8_) to a stub within the _.geso_ section. The additional byte was replaced with a _NOP_ or other 1-byte instructions that have no effect in the context of the call:
 
 ![Relative Call 1]({{site.url}}/assets/colin_mcrae_rally_04/rel_call_1.png)
 
@@ -85,13 +85,13 @@ So far, so good. So nothing special, just a few extra lines for our script. But 
 
 ![Relative Call 3]({{site.url}}/assets/colin_mcrae_rally_04/rel_call_3.png)
 
-So we need to add another few lines to our script to search for relative CALLS that call an address in the SecuROM section. Unfortunately there are also some calls where the stuffed byte is appended to the call:
+So we need to add another few lines to our script to search for relative CALLS that call an address in the SecuROM section (_.geso_). Unfortunately there are also some calls where the stuffed byte is appended to the call:
 
 ![Relative Call 4]({{site.url}}/assets/colin_mcrae_rally_04/rel_call_4.png)
 
 ![Relative Call 5]({{site.url}}/assets/colin_mcrae_rally_04/rel_call_5.png)
 
-For this case I added a check to see if the preceding instruction is a _PUSH_ of some sort (1 Byte, 3 Byte and 6 Byte version). To make things more complicated there is also a version with the stuffed byte after the call, but without a preceeding push/pop:
+For this case I added a check to see if the preceding instruction is a _PUSH_ or _POP_ of some sort since they can not be ignored and thus must be an original instruction. To make things more complicated there is also a version with the stuffed byte after the call, but without a preceeding push/pop:
 
 ![Relative Call 6]({{site.url}}/assets/colin_mcrae_rally_04/rel_call_6.png)
 
