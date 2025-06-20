@@ -96,7 +96,7 @@ With that out of the way we can finally dump the game.exe and have basically def
 
 If you would like to create a real No-CD-Crack, we can use the same trick from GTA 3, so let's break on the classic _GetDriveTypeA_ and have a look around:
 
-![No CD Crack]({{site.url}}/assets/gta_vice_city/no_cd_crack.png)
+![Patches]({{site.url}}/assets/gta_vice_city/patches.png)
 
 Well, that's easy isn't it?
 
