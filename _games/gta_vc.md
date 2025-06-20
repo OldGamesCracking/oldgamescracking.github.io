@@ -89,3 +89,31 @@ So how can we fix this? Well, we could recompile Scylla with a larger value, but
 Patches are for v0.9.8<br>
 
 With that out of the way we can finally dump the game.exe and have basically defeated SecuROM once again.
+
+## Bonus Points
+
+![No CD]({{site.url}}/assets/gta_vice_city/no_cd.png)
+
+If you would like to create a real No-CD-Crack, we can use the same trick from GTA 3, so let's break on the classic _GetDriveTypeA_ and have a look around:
+
+![No CD Crack]({{site.url}}/assets/gta_vice_city/no_cd_crack.png)
+
+Well, that's easy isn't it?
+
+- Change 'C' to a '.'
+- Change ':\\' to '\\'
+- Patch the JMP
+- Don't forget to copy all Audio files from disc to  the install dir
+
+Or in other words:
+
+```
+>gta-vc.exe
+001D7941:43->2E
+001D797F:75->90
+001D7980:56->90
+002A557C:3A->5C
+002A557D:5C->00
+```
+
+That was kinda easy. Much easier than GTA 3 ;)<br><br>
