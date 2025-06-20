@@ -16,7 +16,7 @@ tags:
 | ------------- | ------------- |
 | Release-Date | 04/2004 |
 | Redump ID | [37749](http://redump.org/disc/37749/) |
-| Protection | SecuROM 5.03.04 |
+| Protection | SecuROM v5.03.04 |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |
 | Scene-Crack by | [DEVIANCE](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=61467) |

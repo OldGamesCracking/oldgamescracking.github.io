@@ -18,7 +18,7 @@ tags:
 | ------------- | ------------- |
 | Release-Date | 05/2003 |
 | Redump ID | [19050](http://redump.org/disc/19050/) & [10500](http://redump.org/disc/10500/) |
-| Protection | SecuROM 4.84.69 |
+| Protection | SecuROM v4.84.69 |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |
 | Scene-Crack by | [FAIRLIGHT](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=31424) |

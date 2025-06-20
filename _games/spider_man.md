@@ -19,6 +19,8 @@ tags:
 | Tested under | Win 10 |
 | Scene-Crack by | ??? |
 
+![Cover]({{site.url}}/assets/spider_man/cover.jpg)
+
 ### Disclaimer
 
 - The games are cracked for educational purpose and to regain compatibility with modern systems
