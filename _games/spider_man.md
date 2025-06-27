@@ -19,7 +19,7 @@ tags:
 | Tested under | Win 10 |
 | Scene-Crack by | ??? |
 
-![Cover]({{site.url}}/assets/spider_man/cover.jpg)
+![Cover]({{site.url}}assets/spider_man/cover.jpg)
 
 ### Disclaimer
 
@@ -33,11 +33,11 @@ This game has probably the most simplest form of a protection. As far as I can t
 
 To crack it, open the _SpideyPC.exe_ in your favorite debugger (I use x86dbg) and let it run without the CD inserted. You should get a messagebox with the famous message:<br>
 
-![CD-Check]({{site.url}}/assets/spider_man/cd_check.png)
+![CD-Check]({{site.url}}assets/spider_man/cd_check.png)
 
 Now use the ages-old trick to locate the messagebox via 'Pause Debugger' + 'Run to user code' and then press the Ok button. You should break right after the messagebox. Look around, the check and the jump are right above:
 
-![check]({{site.url}}/assets/spider_man/check.png)
+![check]({{site.url}}assets/spider_man/check.png)
 
 Place a breakpoint on the call and restart the program. Once you break there, observe ESP before and after the call (in both cases it should be 0x0019FE34) which means that no parameter was passed to the CALL and we can savely place the following instructions right at the start of the subroutine:
 

@@ -31,17 +31,17 @@ It's nice to see that this game still starts up after all these years (it's near
 
 As usual, start the game and you are greeted with a warning text:
 
-![CD-Check]({{site.url}}/assets/grand_theft_auto/no_cd.png)
+![CD-Check]({{site.url}}assets/grand_theft_auto/no_cd.png)
 
 Ok, now that we know what we are dealing with, it's time to crack that thing ;)<br>
 
 Fire up your debugger (ideally on the second screen) and let the game run until the warning. In the debugger, search for strings containing "warning" (maybe you need to play in english for that to work) and you should find this: 
 
-![CD-Check]({{site.url}}/assets/grand_theft_auto/warning.png)
+![CD-Check]({{site.url}}assets/grand_theft_auto/warning.png)
 
 So, there are two jumps, a conditional and an unconditional. The conditional will jump based upon the value at 0x004BEDC0 (which I have already labeled with _cd\_check_). Search for all appearences of this value and you should find this place:
 
-![CD-Check]({{site.url}}/assets/grand_theft_auto/check_1.png)
+![CD-Check]({{site.url}}assets/grand_theft_auto/check_1.png)
 
 So, based on the value at 0x004BFAE0 (_cd\_check\_0_), _cd\_check_ is set or not. Repeat the reference-search with _cd\_check\_0_ but you will probably draw a blank.
 So indstead, place a hardware breakpoint on access there and re-run the game again. But still, we land at 0040738D. This is strange. My guess is, that this is a constant value, probably some flag that the developers put there to disable the CD check during development since - as I realized just now - the address 0x004BFAE0 is
