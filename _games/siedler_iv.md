@@ -46,7 +46,7 @@ I got this game a while ago in a bundle of many other games. Upon checking Redum
 
 By the way, if you wonder, how to detect the exact SafeDisc version (at least for v2.x), search for the string `BoG_ *90.0&!!  Yy>` in the .exe file, the three 32-Bit values after that are the Major, Minor, Fix version:
 
-![SafeDisc Version]({{site.url}}/assets/siedler_iv/safedisc_version.png)
+![SafeDisc Version]({{site.url}}assets/siedler_iv/safedisc_version.png)
 
 This would be v2.10.030.<br>
 
@@ -54,7 +54,7 @@ I again used ProcMon to give myself a short overview and it looked like this ver
 
 The debugger detection is the same as before (PEB & NtQueryInformationProcess), so I simply used ScyllaHide this time to tackle that more easily:
 
-![Scylla Settings]({{site.url}}/assets/siedler_iv/scylla_settings.png)
+![Scylla Settings]({{site.url}}assets/siedler_iv/scylla_settings.png)
 
 This time I was interested in where the tail jump actually is, so I started off by breaking in _LoadLibraryA_ in hope to see the transition from SafeDisc code to game code.
 I filtered down the results by only breaking on _version.dll_ (which I found was one of the last loads) by the following breakpoint code:
@@ -67,11 +67,11 @@ bphwcond $addr_LoadLibraryA, "stristr(utf8(arg.get(0)), \"version.dll\") == 1"
 
 From there I climbed my way up, past some Resolver stubs we know already and finally ended up on this bit which smelled like a tail (jump):
 
-![Tail Jump]({{site.url}}/assets/siedler_iv/tail_jump.png)
+![Tail Jump]({{site.url}}assets/siedler_iv/tail_jump.png)
 
 To get up with a more general solution for next time, I then restarted the game, typed in the address of the jump and was rather surprised to see that the jump was already there:
 
-![Tail Jump Start]({{site.url}}/assets/siedler_iv/tail_jump_2.png)
+![Tail Jump Start]({{site.url}}assets/siedler_iv/tail_jump_2.png)
 
 So, place a HW BP there, let it rip and after one single step we can create a snapshot of our VM session.<br>
 
@@ -79,11 +79,11 @@ A short look around reveals that the intermodular calls look like the ones we kn
 So I let the script run, just added a minor check and after a few seconds everything was fixed ;)<br>
 The only thing I had to manually fix was to remove the one left over import from the SafeDisc DLL:
 
-![Imports]({{site.url}}/assets/siedler_iv/imports.png)
+![Imports]({{site.url}}assets/siedler_iv/imports.png)
 
 But turns out, the game won't start. Took me some moments to realize that game calls other modules via registers. For example:
 
-![Call via register]({{site.url}}/assets/siedler_iv/call_via_register.png)
+![Call via register]({{site.url}}assets/siedler_iv/call_via_register.png)
 
 Well, this is annoying since the CALL and thus the return address is seperate from the place where the thunk is MOVed to the register, so how do we figure out the return address? Maybe we just don't care and use zero as return address since sometimes you have many _CALL ESI_ one after another and that would have complicated things for SafeDisc also. So, just ignore it ;)<br>
 Turns out, this idea works fine ;) The only tideous task was to implement the check for all x86 Registers (except ESP).<br>
@@ -99,3 +99,5 @@ $iat_start = 0x0057A000
 $iat_size = 0x000008E8
 $user_code_end = 0x18000000
 ```
+
+* * *

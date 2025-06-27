@@ -64,3 +64,5 @@ By the way, a while ago, Rockstar put the game for free on the net, so you could
 Also on [archive.org](https://archive.org/details/gta1_cdcrack) we find a NO-CD-Crack by a group named _Acetate_. Unluckily I couldn't find more background info on them. So if you have any, send it to me ;)<br>
 
 The Crack is actually a 16-Bin executeable from the Win95-Era that won't run under modern Windows. Also having a look with Ghidra did not work out well, so I would need to install a Win98 VM which did not work so far... I guess I have to test this on another day.
+
+* * *

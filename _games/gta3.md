@@ -532,3 +532,5 @@ In Part II we will have a look at the CD-Checks.<br>
 BTW: Dont't waste your time on reading the script, it's here just for the record. In Part II I have changed, fixed and optimized many aspects of it ;) 
 
 ![CD Check]({{site.url}}assets/gta3/cd_check.jpg)
+
+* * *

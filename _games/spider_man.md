@@ -64,3 +64,5 @@ Another _MCI\_STATUS_ (0x814) with _MCI\_STATUS\_ITEM_ (0x100) and dwItem=MCI\_S
 So in the end it seems to boil down to the simple fact that we need a CD that has 2 tracks on it and the size (length) must be between 004434F0 and 0049B330, that's it.<br><br>
 
 By the way. While searching the net on background info to all this _mciSendCommand_ stuff, I discovered [krystalgamer's Blog](https://krystalgamer.github.io/spidey-breaking/index.html) who seems to had a look into this game before, what a coincidence :)
+
+* * *

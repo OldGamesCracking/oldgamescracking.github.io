@@ -22,7 +22,7 @@ tags:
 | Tested under | WinXP & Win 10 |
 | Scene-Crack by | [Fairlight](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=17617) |
 
-![Cover]({{site.url}}/assets/robin_hood/cover.jpg)
+![Cover]({{site.url}}assets/robin_hood/cover.jpg)
 
 *Needed Tools:*
 
@@ -47,3 +47,5 @@ So it's reading a bunch of data from AZKUK\_F\_P.PAK from disc and _Robin Hood.i
 If you copy this file from the temp folder (while the game is running) back to the game dir, you will realize that this is actually the original game.exe without any additional layers of protection, not even a CD-Check. You can just copy it (rename it) and use it as it is :)<br><br>
 
 By the way, the original (protected) game wouldn't start for me sometimes, I had to re-start it about 5 times, probably my disc is already dying :( But the 'cracked' version runs fine on my Win 10 machine ;)<br><br>
+
+* * *

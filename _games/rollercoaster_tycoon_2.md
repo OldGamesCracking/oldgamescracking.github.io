@@ -21,7 +21,7 @@ tags:
 | Tested under | Win 10 |
 | Scene-Crack by | [RAZOR1911](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=16156) |
 
-![Cover]({{site.url}}/assets/rollercoaster_tycoon_2/cover.jpg)
+![Cover]({{site.url}}assets/rollercoaster_tycoon_2/cover.jpg)
 
 *Needed Tools:*
 
@@ -48,7 +48,7 @@ erun
 
 After we finally break, we step out and have a look around:
 
-![Cover]({{site.url}}/assets/rollercoaster_tycoon_2/oep.png)
+![Cover]({{site.url}}assets/rollercoaster_tycoon_2/oep.png)
 
 That smells a lot like we've found the OEP. The first marked call is probably _GetVersion_. So we remember 0x006F09B7 as possible OEP (bookmark it if you like).<br>
 Now comes the first tricky part. As you've probably already found out, the code at the OEP is encrypted upon program startup, but since we can not use (HW) breakpoints on user code, we need another 'anchor' that tells us when we are about to make the tail jump. Two classic methods to do this are _VirtualProtect_ and _WriteProcessMemory_. Luca D'Amico suggested to use _WriteProcessMemory_ which can be absolutely fine, but since in theory, the process can just write to it's own memory via memcpy or a simple loop, I will go with _VirtualProtect_. I found out that there is only one call that is interesting to us. Once we've passed that, we can place a HW BP on the OEP and were done. Again, I used the following script to make my life a bit easier:
@@ -74,9 +74,9 @@ Once at the OEP, don't forget to make a snapshot of your VM ;)<br>
 Time to repair the imports.<br>
 If we step into the first intermodular call, we end up in quite a large stub that will ultimately jump to the real function via a _JMP EAX_ at the end. Luckily the stub starts with a _PUSH EBP_ and a corresponding _POP EBP_ directly before the _JMP_, we can use this for our advantage:
 
-![Stub Start]({{site.url}}/assets/rollercoaster_tycoon_2/stub_start.png)<br>
+![Stub Start]({{site.url}}assets/rollercoaster_tycoon_2/stub_start.png)<br>
 
-![Stub End]({{site.url}}/assets/rollercoaster_tycoon_2/stub_end.png)<br>
+![Stub End]({{site.url}}assets/rollercoaster_tycoon_2/stub_end.png)<br>
 
 Simply put a HW BP on the top stack element once the _PUSH EBP_ is executed. Then, when the BP hits, read out EAX. But we have to face one last problem. Remember the image I showed you when we found the OEP? Have a closer look at the marked function calls. Although we expected them to be two different functions (_GetVersion_ and _GetCommandLineA_), they both call the same thunk. If you've read the later articles about SafeDisc, you might recognize this trick. We actually need to make sure that we call the thunk from where it would be called in the normal program flow, or in other words: We need to put the real return address on the stack before we repair the import. So the process goes like this:
 
@@ -205,7 +205,7 @@ end:
     log "Done ;)"
 ```
 
-You can find the script [here]({{site.url}}/assets/rollercoaster_tycoon_2/import_fixer.txt)
+You can find the script [here]({{site.url}}assets/rollercoaster_tycoon_2/import_fixer.txt)
 
 If you've read the script thoroughly, you should have realized that the main trick here was to reconstruct the CALLs not in a linear fashion, but in an 'arbitrary' pattern since the stub seems to detect such a scenario, also going through the CALLs in reverse order will be detected by SecuROM and the resolved addresses get messed up. I ended up with a solution where I alternate between one CALL after the OEP then one CALL before the OEP. Luca D'Amico also wrote a [script](https://github.com/x64dbg/Scripts/pull/25) that we could have used. His script goes through the CALLs in chunks which also seems to work.<br><br>
 

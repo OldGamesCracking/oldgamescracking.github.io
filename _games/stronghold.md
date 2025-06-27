@@ -65,3 +65,5 @@ Well, this is pretty much the same as normal CALLs only a different Opcode is us
 One thing that did not work so well was testing the game under Win 10. It crashes and I don't have a clue why (probably some Video Card driver issue). Interestingly the game works absolutely perfect in the VM including animations, videos and all the other stuff, which it normally doesn't. So I would still call this a success. And also the developers were so nice to not include any additional CD-Checks :)
 
 [The unpacking script (At the time of writing this article)](https://github.com/OldGamesCracking/oldgamescracking.github.io/blob/ea0a33b08e53aef5a7df1898101db537168e5415/assets/safedisc/safedisc_import_fixer.txt)
+
+* * *

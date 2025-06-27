@@ -101,3 +101,5 @@ That was fun ;)<br><br>
 ## (Famous) Last words
 
 MYTH: Always Ahead Of The Class!
+
+* * *
