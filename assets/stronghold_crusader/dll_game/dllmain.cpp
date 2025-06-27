@@ -124,7 +124,7 @@ BOOL __stdcall Callback_VirtualProtect(LPVOID lpAddress, SIZE_T dwSize, DWORD fl
 
 BOOL __stdcall Callback_CreateProcessA(LPCSTR lpApplicationName, LPSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, LPSTARTUPINFOA lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation)
 {
-    printf("Callback_CreateProcessA_t:\n");
+    printf("Callback_CreateProcessA:\n");
     printf("\tlpApplicationName: %s\n", (lpApplicationName != NULL) ? lpApplicationName : "NULL");
     printf("\tlpCommandLine: %s\n", (lpCommandLine != NULL) ? lpCommandLine : "NULL");
 
