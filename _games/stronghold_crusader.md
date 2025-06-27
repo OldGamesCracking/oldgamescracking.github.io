@@ -267,7 +267,7 @@ DWORD checksum = *(DWORD*)&md5.digest[3 * sizeof(DWORD)];
 
 So actually nothing special. The hash is simply divided into 4 DWORDs, but the lookup key is in big-endian byte order. We will see their meaning in a short moment. Once the _lookupKey_ is extracted, a CALL at 0x00AAC6DC follows which is where all the fun stuff happens and which took me the longest time to understand.
 
-![Get Nanomite Data]({{site.url}}assets/gta3/get_nanomite_data.png)
+![Get Nanomite Data]({{site.url}}assets/stronghold_crusader/get_nanomite_data.png)
 
 I will spare you with the cruel details, but this is what happends:<br>
 
@@ -320,14 +320,14 @@ The _checksum_ member at the end should be the same value as the checksum we ext
 So, everything thats left to do now is actually:
 
 ```c
-WriteProcessMemory(hProcess, address - data.offset, data.buffer, data.size, &bytesWritten)
+WriteProcessMemory(hProcess, exceptionAddress - data.offset, data.buffer, data.size, &bytesWritten)
 ```
 
 Easy, right? Wonder why this took me so long to figure out :D But three questions remain:
 
 - Where actually is said search tree located?
 - How can we traverse it ourselves?
-- How do we get the addresses of the Nanomites?
+- How do we get the original addresses of where the Nanomites are located?
 
 The first two questions took me quite some time to figure out since I was unsure if it really was just a simple binary tree.
 When I dug deeper in the code, I realized that the tree is created during runtime and that there is an underlaying array from which it is constructed. The array is simply 100 entries of the following form:
@@ -386,13 +386,13 @@ for (SIZE_T b = 0; b < 16; b++)
 
 NANOMITE_DATA_t *nm = (NANOMITE_DATA_t*)data;
 
-// nm.size      : 5
-// nm.offset    : 0
-// nm.data      : B9 18 0F 68 01 (C7 05)
-// nm.checksum  : 0xC3F19F4F
+// nm->size      : 5
+// nm->offset    : 0
+// nm->data      : B9 18 0F 68 01 (C7 05)
+// nm->checksum  : 0xC3F19F4F
 ```
 
-By the way, the _gameSecret_ (0x000000F7) I talked about earlier is located directly in front of the raw data.<br>
+By the way, the _gameSecret_ (0x000000F7) I talked about earlier is located directly in front of the raw data (marked in green).<br>
 
 Before:
 
