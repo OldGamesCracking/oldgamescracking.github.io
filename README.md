@@ -67,9 +67,9 @@ If you are new to the topic, I recommed reading the articles in the following or
 - Nanomites are restored via brute-force by injected DLL
 - Imports are restored via Script
 
-[Stronghold Deluxe](https://oldgamescracking.github.io/games/stronghold_crusader)
+[Stronghold Crusader](https://oldgamescracking.github.io/games/stronghold_crusader)
 
-- Same as GTA 3
+- Same as Stronghold Deluxe
 - Self-Debugging (Nanomites)
 - Deep-Dive on how Nanomites are stored
 - Nanomites are restored by decrypting the underlaying data
