@@ -204,6 +204,8 @@ int main(int argc, char** argv)
 
 	printf("Injection done\n");
 
+	Sleep(3000);
+
 	ResumeThread(pi.hThread);
 
 	printf("Thread resumed\n");
