@@ -74,3 +74,9 @@ If you are new to the topic, I recommed reading the articles in the following or
 - Deep-Dive on how Nanomites are stored
 - Nanomites are restored by decrypting the underlaying data
 - Imports are restored via injected DLL
+
+[Harry Potter and the Chamber of Secrets](https://oldgamescracking.github.io/games/harry_potter_2)
+
+- Same as Stronghold Crusader
+- Deep-Dive on how Virtualized Jumps are stored
+- Fake Nanomites
