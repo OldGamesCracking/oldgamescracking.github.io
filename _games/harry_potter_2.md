@@ -86,11 +86,11 @@ A Nanomite was found at address 0x1090956C and if we look there in the debugger,
 
 ![Nanomite Original]({{site.url}}assets/harry_potter_2/nanomite_org.png)
 
-But look what happens if we will fix it:
+But look what happens if we fix it:
 
 ![Nanomite Fixed]({{site.url}}assets/harry_potter_2/nanomite_fixed.png)
 
-Looks somewhat ok, right? Well, look again, see how the popped number of stack values changed from 0x4 to 0x104 ? If there are enough values on the stack it will not crash right away but maybe many instructions later when e.g. a pointer on the stack is used. I found out that Nanomites with a restore-offset of != 0 were mainly causing this problem so I excluded them. Also checking if there is an execution path to the restored bytes (exluding the first byte) proved to be helpful. Sadly, I can only check for non-trivial execution paths like Jumps or Calls at the moment, and I do the test based upon a byte pattern, not via parsing the instructions. That being said, I needed to introduce a whitelist since there is at least one valid Nanomite at 0x1090AA62 with that criteria. Feel the sphaghetti code already? Yep, me too ;)<br>
+Looks somewhat ok, right? Well, look again and watch the RET above. See how the number of popped stack values changed from 0x4 to 0x104 ? If there are enough values on the stack it will not crash right away but maybe many instructions later when e.g. a pointer on the stack would used. I found out that Nanomites with a restore-offset of != 0 were mainly causing this problem so I excluded them. Also checking if there is an execution path to the restored bytes (exluding the first byte) proved to be helpful. Sadly, I can only check for non-trivial execution paths like Jumps or Calls at the moment, and I do the test based upon a byte pattern, not via parsing the instructions. That being said, I needed to introduce a whitelist since there is at least one valid Nanomite at 0x1090AA62 with that criteria. Feel the sphaghetti code already? Yep, me too ;)<br>
 
 So for example, have a look at the Nanomite at 0x1090610E:
 
@@ -118,7 +118,11 @@ This CALLs to a setup-stub, then a lookup-stub and then the classic-stub:
 
 ![VJ CALL]({{site.url}}assets/harry_potter_2/vj_classic.png)
 
-So far nothing special. Let's perform the old trick to get out of this mess (HW BR on stack-top after PUSHFD/PUSHAD). Ok, we land in this mess, looks like the stack is manually re-sorted somehow. But let's ignore that for a moment and hit F9 until we land back on a POPFD and step out. You should be here now:
+So far nothing special. Let's perform the old trick to get out of this mess (HW BR on stack-top after PUSHFD/PUSHAD). Ok, we land in this mess, looks like the stack is manually re-sorted somehow:
+
+![VJ CALL]({{site.url}}assets/harry_potter_2/vj_mess.png)
+
+But let's ignore that for a moment and hit F9 until we land back on a POPFD and step out. You should be here now:
 
 ![VJ CALL]({{site.url}}assets/harry_potter_2/vj_end.png)
 
@@ -128,10 +132,10 @@ Well, if you have a look at the address, you might realize that we landed at the
 
 Just before the end of the function, we find another CALL to that mysterious SafeDisc stub which lacks a setup instruction to set the ZeroFlag, so this will probably virtualize an ordinary JMP. But how can we tell them apart?<br>
 
-At this moment I was lacking a good (simple) way to figure out the type of the Jump and it's destination. So there really was only one way: Start up Ghidra and reverse that thing! This time it actually didn't took too long since I recognized some patterns from the previous article and the time I reversed the Nanomites so after just a couple of hours, this is what I figured out:
+At this moment I was lacking a good (simple) way to figure out the type of the Jump and it's destination. So there really was only one way: Start up Ghidra and reverse that thing! This time it actually didn't took too long since I recognized some patterns from the previous article and the time I reversed the Nanomites. So after just a couple of hours, this is what I figured out:
 
 - Based on the return address on the stack, a lookup-hash is generated.
-- This lookup is then searched in a list or binary tree of 'Nodes' (I guess - doesen't matter)
+- This lookup is then searched in a list of 'Nodes'
 - If a matching Node is found, it is decrypted. The node contains various fields, the most important of them being the Jump-Type and offset.
 - The jump is then virtually performed by altering the return address on the stack
 
@@ -190,14 +194,22 @@ buffer[1] = (BYTE)(type >> 8);
 buffer[2] = (BYTE)(type >> 0);
 ```
 
-This is true for 5 and 6 byte types.<br>
+The very same code is used for 5 and 6 byte types, so the last or the last 2 bytes of the type are usually overwritten by the operand (the offset).<br>
 
 So, the last question that remains now is: Where is the underlaying array that holds all the nodes? Have a look at this routine:
 
 ![VJ CALL]({{site.url}}assets/harry_potter_2/vj_raw.png)
 
-So, there you have it, we have 0x80 nodes, starting at 0xA5CFB8. Reconstructing them is quite easy. Just go through the text section, search for relative Calls (E8) and see if we have a corresponding lookup. For more details, have a look at _FixVirtualizedJumps_.<br>
+There you have it, 0x80 nodes, starting at 0xA5CFB8. Reconstructing them is quite easy. Just go through the text section, search for relative Calls (E8) and see if we have a corresponding lookup. For more details, have a look at _FixVirtualizedJumps_.<br>
 
 I guess these were the major changes, there might have been more smaller improvements but I don't remember all of them :)<br>
 
-The game does not seem to have more additional CD-Checks and I could play for a few minutes, so I guess I have found and removed most of the SafeDisc stuff ;)
+The game does not seem to have additional CD-Checks and I have played it for a few minutes without any problems, so I guess I have found and removed most of the SafeDisc stuff ;)
+
+Latest version of the _dll\_worker_:<br>
+
+[Worker DLL](https://github.com/OldGamesCracking/oldgamescracking.github.io/tree/main/assets/harry_potter_2/dll_worker)<br>
+
+To inject it, use the [Simple Injector](https://github.com/OldGamesCracking/oldgamescracking.github.io/tree/main/assets/simple_injector) I created for Stronghold Deluxe and the [Game DLL](https://github.com/OldGamesCracking/oldgamescracking.github.io/tree/main/assets/stronghold_crusader/dll_game) from Stronghold Crusaders.<br>
+
+* * *
