@@ -3,7 +3,6 @@
 #include <tlhelp32.h>
 #include <psapi.h>
 #include <shlwapi.h>
-#include <Zydis/Zydis.h>
 #include "logging.h"
 #include "hooking.h"
 #include "calls_list.h"
