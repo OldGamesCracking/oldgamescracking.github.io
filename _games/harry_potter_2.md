@@ -24,7 +24,7 @@ tags:
 | Tested under | Win XP & Win 10 |
 | Scene-Crack by | [DEVIANCE](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=17385) / [CLASS](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=17399) |
 
-![Cover]({{site.url}}assets/harry_potter_2/cover.jpg)
+![Cover]({{site.url}}/assets/harry_potter_2/cover.jpg)
 
 *Needed Tools:*
 
@@ -53,52 +53,52 @@ Anyways, remember how we found and decrypted the Nanomites last time? My guess w
 
 Old:
 
-![Salt Base Old]({{site.url}}assets/harry_potter_2/salt_base_old.png)
+![Salt Base Old]({{site.url}}/assets/harry_potter_2/salt_base_old.png)
 
 New:
 
-![Salt Base New]({{site.url}}assets/harry_potter_2/salt_base_new.png)
+![Salt Base New]({{site.url}}/assets/harry_potter_2/salt_base_new.png)
 
 The code around the SALT\_XOR has also not changed, but different registers were chosen by the compiler so I had to search a bit:
 
 Old:
 
-![XOR Old]({{site.url}}assets/harry_potter_2/xor_old.png)
+![XOR Old]({{site.url}}/assets/harry_potter_2/xor_old.png)
 
 New:
 
-![XOR New]({{site.url}}assets/harry_potter_2/xor_new.png)
+![XOR New]({{site.url}}/assets/harry_potter_2/xor_new.png)
 
 The location and number of the raw Nanomites was easy to find via a pattern:
 
 Old:
 
-![Num Nanomites Old]({{site.url}}assets/stronghold_crusader/num_nanomites.png)
+![Num Nanomites Old]({{site.url}}/assets/stronghold_crusader/num_nanomites.png)
 
 New:
 
-![Num Nanomites New]({{site.url}}assets/harry_potter_2/num_nanomites_new.png)
+![Num Nanomites New]({{site.url}}/assets/harry_potter_2/num_nanomites_new.png)
 
 So as we can see, the underlaying code of the Nanomites has not changed, only updated keys and addresses. So we should be able to just update some defines and we are good to go. Well, if it was as easy as that...<br>
 It took me quite some while to realize that some of the Nanomites were actually fake and were deliberately added to fool us. Some of them beeing very sneaky as the effects are rather subtle and only cause problems later down the line. For example, have a look at the following situation:<br>
 
 A Nanomite was found at address 0x1090956C and if we look there in the debugger, it also looks like that it is a valid Nanomite (although we can't see no execution path to that location):
 
-![Nanomite Original]({{site.url}}assets/harry_potter_2/nanomite_org.png)
+![Nanomite Original]({{site.url}}/assets/harry_potter_2/nanomite_org.png)
 
 But look what happens if we fix it:
 
-![Nanomite Fixed]({{site.url}}assets/harry_potter_2/nanomite_fixed.png)
+![Nanomite Fixed]({{site.url}}/assets/harry_potter_2/nanomite_fixed.png)
 
 Looks somewhat ok, right? Well, look again and watch the RET above. See how the number of popped stack values changed from 0x4 to 0x104 ? If there are enough values on the stack it will not crash right away but maybe many instructions later when e.g. a pointer on the stack would used. I found out that Nanomites with a restore-offset of != 0 were mainly causing this problem so I excluded them. Also checking if there is an execution path to the restored bytes (exluding the first byte) proved to be helpful. Sadly, I can only check for non-trivial execution paths like Jumps or Calls at the moment, and I do the test based upon a byte pattern, not via parsing the instructions. That being said, I needed to introduce a whitelist since there is at least one valid Nanomite at 0x1090AA62 with that criteria. Feel the sphaghetti code already? Yep, me too ;)<br>
 
 So for example, have a look at the Nanomite at 0x1090610E:
 
-![Nanomite with path]({{site.url}}assets/harry_potter_2/nanomite_with_path.png)
+![Nanomite with path]({{site.url}}/assets/harry_potter_2/nanomite_with_path.png)
 
 If we would fix it, the following five bytes would also get replaced (it's a 2-byte Nanomite that has a payload of 7 bytes, offset is 0):
 
-![Nanomite with path fixed]({{site.url}}assets/harry_potter_2/nanomite_with_path_fixed.png)
+![Nanomite with path fixed]({{site.url}}/assets/harry_potter_2/nanomite_with_path_fixed.png)
 
 So this looks like a fake-Nanomite. To solve the situation, as I said, I checked for paths to the 5 overlapping bytes. Luckily there is a JMP at 0x10909640, which - according to my theaory - means that it's a fake Nanomite. Although I could imagine a situation in which the payload of the Nanomite contains the original data and thus would not corrupt the code, but for now, this does not seem to be the case.<br>
 
@@ -108,27 +108,27 @@ So, as always, have a look at _FixNanomites_ in the code of the latest dll\_work
 
 Remember relayed Calls from the previous articles? They now got a little (big) brother: Virtualized Jumps. But before I try to explain them, let's simply see them in action. So for example at 0x10902527 we will find a CALL to the SafeDisc section.
 
-![VJ CALL]({{site.url}}assets/harry_potter_2/vj_call.png)
+![VJ CALL]({{site.url}}/assets/harry_potter_2/vj_call.png)
 
 This CALLs to a setup-stub, then a lookup-stub and then the classic-stub:
 
-![VJ CALL]({{site.url}}assets/harry_potter_2/vj_setup.png)
+![VJ CALL]({{site.url}}/assets/harry_potter_2/vj_setup.png)
 
-![VJ CALL]({{site.url}}assets/harry_potter_2/vj_lookup.png)
+![VJ CALL]({{site.url}}/assets/harry_potter_2/vj_lookup.png)
 
-![VJ CALL]({{site.url}}assets/harry_potter_2/vj_classic.png)
+![VJ CALL]({{site.url}}/assets/harry_potter_2/vj_classic.png)
 
 So far nothing special. Let's perform the old trick to get out of this mess (HW BR on stack-top after PUSHFD/PUSHAD). Ok, we land in this mess, looks like the stack is manually re-sorted somehow:
 
-![VJ CALL]({{site.url}}assets/harry_potter_2/vj_mess.png)
+![VJ CALL]({{site.url}}/assets/harry_potter_2/vj_mess.png)
 
 But let's ignore that for a moment and hit F9 until we land back on a POPFD and step out. You should be here now:
 
-![VJ CALL]({{site.url}}assets/harry_potter_2/vj_end.png)
+![VJ CALL]({{site.url}}/assets/harry_potter_2/vj_end.png)
 
 Well, if you have a look at the address, you might realize that we landed at the end of the function we were in just moments ago. Also there are some jumps to that address which indicates that - even under normal conditions - there are valid paths to that address, but without the strange intermediate SafeDisc stuff. So what does that mean? Is this just a JMP in disguise and we can patch the CALL to a JMP? Well, not so fast young padawan. Have a closer look at the instruction before the CALL: A _CMP_. So looks like we rather need to patch-in a conditional Jump, probably a JE or a JNE. But, look around, do you see this:
 
-![VJ CALL]({{site.url}}assets/harry_potter_2/vj_jmp.png)
+![VJ CALL]({{site.url}}/assets/harry_potter_2/vj_jmp.png)
 
 Just before the end of the function, we find another CALL to that mysterious SafeDisc stub which lacks a setup instruction to set the ZeroFlag, so this will probably virtualize an ordinary JMP. But how can we tell them apart?<br>
 
@@ -198,7 +198,7 @@ The very same code is used for 5 and 6 byte types, so the last or the last 2 byt
 
 So, the last question that remains now is: Where is the underlaying array that holds all the nodes? Have a look at this routine:
 
-![VJ CALL]({{site.url}}assets/harry_potter_2/vj_raw.png)
+![VJ CALL]({{site.url}}/assets/harry_potter_2/vj_raw.png)
 
 There you have it, 0x80 nodes, starting at 0xA5CFB8. Reconstructing them is quite easy. Just go through the text section, search for relative Calls (E8) and see if we have a corresponding lookup. For more details, have a look at _FixVirtualizedJumps_.<br>
 

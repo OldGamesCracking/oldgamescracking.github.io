@@ -22,7 +22,7 @@ tags:
 | Tested under | WinXP & Win 10 |
 | Scene-Crack by | [Fairlight](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=17617) |
 
-![Cover]({{site.url}}assets/robin_hood/cover.jpg)
+![Cover]({{site.url}}/assets/robin_hood/cover.jpg)
 
 *Needed Tools:*
 

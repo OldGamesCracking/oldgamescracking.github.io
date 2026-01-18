@@ -52,7 +52,7 @@ If we run the game normally in the VM, everything works fine, but as soon as we 
 The infinite loop seemed to be more like some kind of hybernation since the Task Manager indicated no activity, normally you get 100% CPU usage if something ends up in a real infinite loop. This alone should have rang a bell since I had read only a few weeks ago about Armadillo and it's Nanomites. But I had to dig through the net a bit and after a while found out what's going on.<br>
 So, lets put a breakpoint on _WaitForSingleObject_ - we will see in a short moment why. Also I found out that you need at least the following Scylla options:
 
-![Scylla Options]({{site.url}}assets/stronghold_deluxe/scylla.png)
+![Scylla Options]({{site.url}}/assets/stronghold_deluxe/scylla.png)
 
 The following script is what I ended up with to break on WaitForSingleObject:
 
@@ -77,15 +77,15 @@ erun
 
 First, we wait for _shell32.dll_ to be loaded, which I found is a DLL that is loaded somewhat after the game is unpacked and then we wait for _WaitForSingleObject_ with _INFINITE_ as second parameter. If everything works according to the plan, we should break in the temp module of SafeDisc (at 0x1002745A in my case).
 
-![WaitForSingleObject]({{site.url}}assets/stronghold_deluxe/waitforsingleobject.png)
+![WaitForSingleObject]({{site.url}}/assets/stronghold_deluxe/waitforsingleobject.png)
 
 With all the jumps, the SafeDisc code is a mess, but if you dig through it a bit, you will find the corresponding _CreateEvent_ a few lines above:
 
-![CreateEvent]({{site.url}}assets/stronghold_deluxe/createevent.png)
+![CreateEvent]({{site.url}}/assets/stronghold_deluxe/createevent.png)
 
 And also a _SetEvent_, which is actually for another event (compare EBP-0x220 vs. EBP-0x218):
 
-![SetEvent]({{site.url}}assets/stronghold_deluxe/setevent.png)
+![SetEvent]({{site.url}}/assets/stronghold_deluxe/setevent.png)
 
 _What is that all about_ you may ask. Well, this is a very tricky debugger check. It relies on the fact that a process can only have one debugger attached to it at a time.
 If you try to attach another debugger, it fails. The fail/pass information is signaled back to the process via an event. If that event is not signaled, it means a debugger was detected and an infinite loop is created. So it goes something like that:
@@ -172,7 +172,7 @@ error_msg:
 end:
 ```
 
-You can also download the script [here]({{site.url}}assets/stronghold_deluxe/oep_finder.txt).<br>
+You can also download the script [here]({{site.url}}/assets/stronghold_deluxe/oep_finder.txt).<br>
 
 That worked surprisingly well. One could probably also have altered the parameters passed to _WaitForSingleObject_ or returned prematurely from that. So now that we are at the OEP, it's time to fix the IAT. I used the following settings for [my SafeDisc script](https://github.com/OldGamesCracking/oldgamescracking.github.io/blob/main/assets/safedisc/safedisc_import_fixer.txt):
 
@@ -186,15 +186,15 @@ But the script failed after some time. Upon inspection I discovered that the IAT
 
 With that out of the way, I then tried to run the game but only a few instructions into the game we land on this bit:
 
-![Lookup]({{site.url}}assets/stronghold_deluxe/lookup.png)
+![Lookup]({{site.url}}/assets/stronghold_deluxe/lookup.png)
 
 which in turn is called from this 'setup' function:
 
-![Setup]({{site.url}}assets/stronghold_deluxe/lookup_setup.png)
+![Setup]({{site.url}}/assets/stronghold_deluxe/lookup_setup.png)
 
 The setup function simply saves EAX and ECX and calls the - how I called it - 'inner function'. The inner function adds a constant offset to the return value and uses that as a lookup to jump to something we have seen before countless times (if you've read the previous articles on SafeDisc):
 
-![Stub]({{site.url}}assets/stronghold_deluxe/stub.png)
+![Stub]({{site.url}}/assets/stronghold_deluxe/stub.png)
 
 Once the two registers are restored, we end up within the classic stub we all know and love. The stub then resolves to a function somewhere in the user code. So this is basically just a relayed call to some user code.<br>
 
@@ -210,7 +210,7 @@ This worked somewhat ok, but things ended up strange, the code was messed up and
 
 Time to finally start the game. But wait, what's that little thing there doing in the code?
 
-![Undefined Instruction]({{site.url}}assets/stronghold_deluxe/ud2.png)
+![Undefined Instruction]({{site.url}}/assets/stronghold_deluxe/ud2.png)
 
 At first I thought I had missed something or my script did not work properly. But it turned out, that even in the un-repaired version of the game, this instruction - which is a [Undefined Instruction](https://mudongliang.github.io/x86/html/file_module_x86_id_318.html) by the way - is also present. That means that someone had placed it there on purpose. Usually if stuff like this happens, a SEH handler is used to repair the code. But while there was certainly one installed, it was just the generic one that was installed by the game itself which did not manage to resolve this issue. So there must be a much more advanced mechanism going on. Time to go down the rabbit hole - are you prepared?<br><br>
 
@@ -261,7 +261,7 @@ The rough idea is as follows:
 
 The actual steps are a bit more finicky, but I will go through them one by one. I have also recreated w4kfu's timing diagram to represent my solution:
 
-![Timing Diagram]({{site.url}}assets/stronghold_deluxe/timing_diagram.png)
+![Timing Diagram]({{site.url}}/assets/stronghold_deluxe/timing_diagram.png)
 
 The box at the bottom is repeated for every found Nanomite.
 

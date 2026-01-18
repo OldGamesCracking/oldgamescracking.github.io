@@ -45,7 +45,7 @@ After I had dived into [GTA 2](/games/gta2) I thought I might have a look into G
 
 As always, open the Game in x32dbg (disable ScyllaHide and pass all exceptions) and have a look around. We are instantly detected, but that was no surprise:
 
-![No disc]({{site.url}}assets/gta3/busted.png)
+![No disc]({{site.url}}/assets/gta3/busted.png)
 
 If we are lucky, they did not change the detection scheme since SafeDisc v1. So let's try the script from last time:
 
@@ -92,33 +92,33 @@ The disc spins up it does some readings and after about 10 seconds, we break in 
 
 By snooping around a bit, I discovered, that there does not seem to be an ICD file anymore (ICD = encrypted game in separete file) and also some strange temporary files are created. I guess it's time for Process Monitor (Procmon). The current version does not seem to work under Win XP but version 3.1 seems to work well enough. I played a bit with the filters to reduce the noise and then it started to give a clearer image:
 
-![Temp File]({{site.url}}assets/gta3/temp_file.png)
+![Temp File]({{site.url}}/assets/gta3/temp_file.png)
 
 So it seems that a temp file is created that is read from the _gta3.exe_ starting at offset 2,811,727 (0x2AE74F). The file is 515,600 bytes in size and is extracted in chunks of 2kb. Having a look with a hex editor at location 0x2AE74F in _gta3.exe_ reveals that the data seems to be encrypted and is decrypted in memory. The temp file itself turns out to be a DLL and as we can see from the imports, the original name seemed to have been _SecServ.dll_ so this is probably part of the SafeDisc driver.
 
-![Temp DLL]({{site.url}}assets/gta3/temp_dll.png)
+![Temp DLL]({{site.url}}/assets/gta3/temp_dll.png)
 
 Another file is created in the same manner:
 
-![Temp File]({{site.url}}assets/gta3/temp_file_2.png)
+![Temp File]({{site.url}}/assets/gta3/temp_file_2.png)
 
 Judging by the strings in the file and the fact that this file will not be removed after the game closes, I get the feeling it's some kind of cleanup worker that removes the temp files, so we will call it _worker.exe_ from now on:
 
-![Cleanup]({{site.url}}assets/gta3/cleanup.png)
+![Cleanup]({{site.url}}/assets/gta3/cleanup.png)
 
 A third file is opened, but nothing gets written to it. My guess is that this is just a dummy file that is monitored by the worker and when the game closes, Windows will release the handle automaticly, until then the worker can not access the file which signals to it that the game is still running.<br>
 Then _worker.exe_ is started. More files (_SECDRV.SYS_ and _DrvMgt.dll_) are created and data is written to them. And finally, a fourth file with a temp name is created. Judging from the info we find in our PE tool, the original name was _AuthServ.dll_ and you can find many "please insert CD" strings in it. So this has all to do with interacting with the disc.<br>
 Next, multiple files from the disc are opened:
 
-![Files on disc]({{site.url}}assets/gta3/disc.png)
+![Files on disc]({{site.url}}/assets/gta3/disc.png)
 
 The _00000001.TMP_ file seems to contain encrypted binary data. The other files are bitmaps and contain the logo that is displayed once the game starts. Interestingly they all contain some small artifacts at different locations which I don't know the reason for yet.
 
-![Artifacts Logo]({{site.url}}assets/gta3/artifacts.png)
+![Artifacts Logo]({{site.url}}/assets/gta3/artifacts.png)
 
 The first 28 bytes from _00000001.TMP_ are read and a threat is created. Then the disc drive is constantly read at various locations, so at that moment the disc is probably checked for authenticity (you can monitor some SCSI commands). Afterwards the thread is closed, so the check routine probably ran in a background thread. Shortly afterwards you can see that the game reads stuff that GTA-fans may recognize: 
 
-![GTA Game files]({{site.url}}assets/gta3/gta_stuff.png)
+![GTA Game files]({{site.url}}/assets/gta3/gta_stuff.png)
 
 So, this in theory means that we never left _gta3.exe_ like we did with SafeDisc v1 and no new process was created. This means that the OEP must be somewhere in the current process. Time to figure out where. So we need what I call an 'anchor' - a known location that will at least tell us that we are past the loader and within the game code. If the anchor stops execution we don't know how far we are in the code, but at least we get a feeling of where the OEP might be.<br>
 
@@ -186,12 +186,12 @@ end:
 
 Stepping out and looking around, we start to realize that we are already quite close:
 
-![Close]({{site.url}}assets/gta3/close.png)
+![Close]({{site.url}}/assets/gta3/close.png)
 
 The _push ebp_ at the top and the _nops_ before that look like a classic Entry Point. So we write that down: 0x005C1E70 and add a _"bphws 0x005C1E70, x, 1"_ to the script.
 Restart and - booom :) We are there ;)<br>
 
-![OEP]({{site.url}}assets/gta3/oep.png)
+![OEP]({{site.url}}/assets/gta3/oep.png)
 
 Well, that was kinda easy. Time for the fun part: fixing the IAT.<br><br>
 
@@ -199,13 +199,13 @@ By the way, you can make a snapshot of the VM now so you can save on the time th
 
 Ok, let's have a closer look at the imports. In the image above we can already see a remote call. Step into that call and we see the following code:
 
-![Call]({{site.url}}assets/gta3/call.png)
+![Call]({{site.url}}/assets/gta3/call.png)
 
 Not exactly the same as SafeDisc 1 but kinda similar. If you try to step over the call, bad things happen. There are probably timing checks in there and the return address is probably checked for a 0xCC to detect a snoopy cracker ;) ... at least that's what I thought first, but it turns out that the problem is that the CALL actually never returned where I thought it would (address 0019992D0 in the image), all this "popad, popfd" was probably only added to confuse us, this code is never reached. In order to figure out the actual remote call address and how we return, this is what I did:
 
 I single stepped past the _pushfd_ and placed a hardware breakpoint on the top of the stack. Then hit F9 and landed here:
 
-![At return]({{site.url}}assets/gta3/ret.png)
+![At return]({{site.url}}/assets/gta3/ret.png)
 
 See how the address of the procedure that we actually tried to call is on the stack? If we return now, we land in that procedure. And the original return address is also there. Ok, this seems repairable:
 
@@ -292,14 +292,14 @@ During the writing of the script I realized that the calls are not unique. Multi
 The Resolver is one hell of a mess and I tried to reverse it but gave up since there are tripwires everywhere and the control flow is fucked up, also the tripwires are silent so sometimes you just end up in a valid but different remote procedure. At one point I decided to just blackbox it.<br>
 That makes things slightly more complicated :( Looks like we also have to patch the CALLs itself to point to the right thunk in order to prevent collisions. But the problem is, where do we put the collided thunks? Well, my first approach was to simply use the empty thunks and hope for the best ;)<br>
 
-![Call Stub]({{site.url}}assets/gta3/call_stub.png)
+![Call Stub]({{site.url}}/assets/gta3/call_stub.png)
 
 So in order to make that happen, we need to modify the script so that it will find all CALLs associated with a given thunk not just a single one.<br>
 
 The script ran fine up to a certain point and the imports were restored but from time to time the game crashed completely or exited while the script was still running. I spent a fair amount of time tracking down the cause and I still don't know the real cause but while searching for similarities amongst the imoprts that were crashing, I discovered, that every crashing import had a CALL that was directly located below a _RET_.<br>
 Either they are fake-Calls that deliberately crash upon using the Resolver on them, probably placed in the empty space that some linkers leave between compilation units, or they serve internal purposes to SafeDisc. Or maybe these were once some kind of Unit-Testing thingies or some guards or whatever but the underlaying library was removed so the Resolver is unable to find the proc addresses... who knows, I did not dig deeper into that.
 
-![Broken Call]({{site.url}}assets/gta3/broken_call.png)
+![Broken Call]({{site.url}}/assets/gta3/broken_call.png)
 
 Also x32dbg could not find any execution paths to these strange CALLs (at least the one I checked), so I gave it a shot and simply ignored every CALL with _RET_ in front of it:
 
@@ -449,19 +449,19 @@ What a monstrosity of a script... (and yet tiny, compared to what will follow)<b
 
 After the script finally passed without crashing I dumped and fixed the game just to discover that it still crashes on me. I tracked down the cause and landed on this strange thing:
 
-![Far Jump]({{site.url}}assets/gta3/far_jump.png)
+![Far Jump]({{site.url}}/assets/gta3/far_jump.png)
 
 A JMP to some quite far away portion of the memory, the code there looks something like that:
 
-![Import]({{site.url}}assets/gta3/import.png)
+![Import]({{site.url}}/assets/gta3/import.png)
 
 So basically it first retrieves EIP via the CALL to the next line (CALL +0) and then gets the address of a stub and places it on the stack to jump there via a return. The stub looks just like we know it:
 
-![Import Stub]({{site.url}}assets/gta3/stub.png)
+![Import Stub]({{site.url}}/assets/gta3/stub.png)
 
 It's like the other stubs, just with an additional return address in front of it. So this is some kind of jump pad code that ends up in a stub and finally in the Resolver:
 
-![Jump Pad]({{site.url}}assets/gta3/jumppad.png)
+![Jump Pad]({{site.url}}/assets/gta3/jumppad.png)
 
 It looks like the stub is for one specific JMP in the code. That makes things easier this time.<br>
 So how does the script look like?<br>
@@ -481,15 +481,15 @@ Enough talk, let's see some code.<br>
 
 At - for example - 0x0048C0BD you find a call to a routine that looks like the following:
 
-![Small Trampoline]({{site.url}}assets/gta3/small_trampoline.png)
+![Small Trampoline]({{site.url}}/assets/gta3/small_trampoline.png)
 
 This is a tiny jump pad that will just put an address on the stack and jump there via a _RET_. So far, nothing special. At the address we see:
 
-![Resolver 2]({{site.url}}assets/gta3/byte_stealer.png)
+![Resolver 2]({{site.url}}/assets/gta3/byte_stealer.png)
 
 This looks and behaves pretty much as the Resolver before, only that I got quite confused on to where it will resolve to. It turned out, that it resolves to the address of the jump pad we just came from but it had altered (decrypted) the code so that the jump pad was replaced with the real code now (compare the addresses in the image):
 
-![Real Code]({{site.url}}assets/gta3/real_code.png)
+![Real Code]({{site.url}}/assets/gta3/real_code.png)
 
 Well, that seemed labor intensive but easy enough I thought, I just had to:
 
@@ -502,7 +502,7 @@ Well, yes, that works exactly one time and then things go south :( After some wh
 Turns out, now the Resolver was not crashing anymore and the script ran fine, but the code gets re-scrambled again by the Resolver and the jump pad is back O.o<br>
 So something like that:<br>
 
-![Crypt Resolver]({{site.url}}assets/gta3/resolver_crypt.png)
+![Crypt Resolver]({{site.url}}/assets/gta3/resolver_crypt.png)
 
 Now comes the challenge: How can we re-construct the code if we must pass execution back to the Resolver but this will ultimately fuck things up again?<br>
 Well, let's try the following:
@@ -518,7 +518,7 @@ Well, let's try the following:
 Sounds easy and straight forward, right? Well, there is one samll detail: No one ever told us how many bytes to copy and the information seems nowhere around :(<br>
 In order to obtain that information I placed a HW BP on 'write' on the first byte of the scrambled code (the jump pad) hoping to land in a loop in the Resolver that would iterater over some control variable. I had to break multiple times since the code seems to be unscrambled in multiple passes, but then I found something:
 
-![Number of Bytes]({{site.url}}assets/gta3/num_bytes.png)
+![Number of Bytes]({{site.url}}/assets/gta3/num_bytes.png)
 
 The _CMP_ is what we were looking for. Strangely, when you run the Resolver for a given stub the first time, this value only holds a quite small value (0x2C in my case), the second time it holds the real value (0x301). I'm guessing for the first time, the data is unscrambled in chunks and for every other run it unscrambles the whole data in one go. Luckily you can always get the total byte-count at ebp+0x5C (in the moment when your HW BP breaks within the loop).<br>
 With that out of the way, we finally know how many bytes to copy to and from the buffer.<br>
@@ -531,6 +531,6 @@ In Part II we will have a look at the CD-Checks.<br>
 
 BTW: Dont't waste your time on reading the script, it's here just for the record. In Part II I have changed, fixed and optimized many aspects of it ;) 
 
-![CD Check]({{site.url}}assets/gta3/cd_check.jpg)
+![CD Check]({{site.url}}/assets/gta3/cd_check.jpg)
 
 * * *

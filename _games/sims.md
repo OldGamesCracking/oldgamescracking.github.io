@@ -38,7 +38,7 @@ Since I have discussed SafeDisc v1.3 already in the [GTA 2 Article](/games/gta2)
 
 Already during the installation we are greeted with a serial check:
 
-![Serial Check]({{site.url}}assets/sims/serial.png)
+![Serial Check]({{site.url}}/assets/sims/serial.png)
 
 Cracking installers is a pain in the ass and I tried to reverse the serial routine but gave up after quite some while. I think it's not too complicated but you'll find a valid key on the net relatively fast, so no real need for a Keygen.<br><br>
 
@@ -86,7 +86,7 @@ end:
 
 The stubs used to hide the imports look kinda like the ones from GTA 2, but they are deceiving:
 
-![Stub]({{site.url}}assets/sims/stub.png)
+![Stub]({{site.url}}/assets/sims/stub.png)
 
 The _JMP_ after isn't actually executed, probably a leftover from the last version to fool us. We use the "Hardware Breakpoint on ESP after pushfd" trick here to get to the end of the stub. We actually need to execute a few _STO_ to really get to the end of the stub but that's the main differecen here. Also I found a few "MOV REG [ADDR], CALL REG" combinations. So I decided to modify my SafeDisc v2 script to now also support v1.40.
 
@@ -104,11 +104,11 @@ That's it, there seems to be no additional CD-Checks and the game runs kinda ok 
 With the CD inserted, we have audio back, but that's not what we want :)<br><br>
 After a short search we land on this bit:
 
-![Sims Music]({{site.url}}assets/sims/sims_music.png)
+![Sims Music]({{site.url}}/assets/sims/sims_music.png)
 
 Looks like some kind of lookup that returns "I:\" (my install drive). With a bit more digging, we find out, that this is a registry key which is looked up under "Software\Maxis\The Sims" and we should probably change it to our install-dir. Since we changed the exe anyways, we can re-use another key that's already there: SIMS\_DATA.
 
-![Registry]({{site.url}}assets/sims/registry.png)
+![Registry]({{site.url}}/assets/sims/registry.png)
 
 So simply change the string at 0x005F2EC8 (SIMS\_MUSIC) to SIMS\_DATA and copy the _Music_ folder on disc to the install dir and we're done ;)<br><br>
 

@@ -21,7 +21,7 @@ tags:
 | Tested under | Win 10 |
 | Scene-Crack by | ??? |
 
-![Cover]({{site.url}}assets/zoo_tycoon_2/cover.jpg)
+![Cover]({{site.url}}/assets/zoo_tycoon_2/cover.jpg)
 
 *Needed Tools:*
 
@@ -37,7 +37,7 @@ This protection is quite unusual in some regards. I have never heard of it and j
 
 Anyways, since I did not knew what to expect, I first used ProcMon to get myself an overview and could see right ahead that the game.exe seems to spawn an external process:
 
-![Temp Process]({{site.url}}assets/zoo_tycoon_2/temp_file.png)
+![Temp Process]({{site.url}}/assets/zoo_tycoon_2/temp_file.png)
 
 This worker is always named _insXXXX.tmp_ with _XXXX_ beeing randomly (?) chosen chars.<br>
 I then tried to run the game in the debugger which worked fine, even without having Scylla enabled at all, but as soon as I tried to break in interesting places, the game was shut down. So it was kinda clear that the _insXXXX.tmp_ process was probably overlooking the whole situation and as soon as anything went wrong, it would shut the game.exe down.<br>
@@ -49,15 +49,15 @@ The second event is called _BITARTSYYYY_ and is created by the worker.exe. I did
 
 What I did then was to figure out the place where the loader code transitions to the game code. For that I did some wild guesses and installed hooks for some functions that are usually called around the OEP (_GetVersion_, _GetCommandLineA_, ...). I got some results for _GetCommandLineA_ and displayed a MessageBox once the function was called which is a simple but effective trick to halt the program at a certain point. Once the MessageBox was displayed, I attached x32dbg, placed a breakpoint after the call to _MessageBoxA_, stepped out and had a look around:
 
-![OEP]({{site.url}}assets/zoo_tycoon_2/oep.png)
+![OEP]({{site.url}}/assets/zoo_tycoon_2/oep.png)
 
 The two other intermodular function calls (_GetVersionExA_ and _GetModuleHandleA_) gave me the confirmation that we were indeed just a few lines past the OEP and that the actual OEP must be at 0x006C3781. The question was now, how can we reach it? Simply putting a HW BP there did not seemed to do the trick. After a bit of fiddling around, I realized that - contrary to my initial believes - there is actually an anti-debugging mechanism in place that kills the HW Breakpoints. Checking the ScyllaHide options _KiUserExceptionDispatcher_ and _NtContinue_ is enough to make the program break on the OEP. The corresponding SEH where the breakpoints are killed is here:
 
-![SEH]({{site.url}}assets/zoo_tycoon_2/seh.png)
+![SEH]({{site.url}}/assets/zoo_tycoon_2/seh.png)
 
 Now that we know where the OEP is, let's put a HW BP there, restart the program and break right on the OEP ;) From here we can directly use Scylla to dump the game and restore the IAT, there are no scrambled imports. For me, two imports were replaced with stubs from _aclayers.dll_. Scylla can not reconstruct these imports. Luckily there are debug strings that we can use to get the original functions and fix them manually:
 
-![aclayers]({{site.url}}assets/zoo_tycoon_2/aclayers.png)
+![aclayers]({{site.url}}/assets/zoo_tycoon_2/aclayers.png)
 
 That's it. I hope there are no late checks in the game, but upon playing for a few minutes, I could not find anything unusual.<br><br>
 

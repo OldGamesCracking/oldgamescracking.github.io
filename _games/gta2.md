@@ -45,12 +45,12 @@ For those of you who are playing along at home, try one of the many versions on 
 SafeDisc needs a bit of a setup, so first get and old PC with Windows XP or set up a VM and pass through the CD drive. x32dbg will complain, but it will run there.<br>
 Load the game in the debugger and we are immedeately busted:
 
-![No disc]({{site.url}}assets/gta2/busted.png)
+![No disc]({{site.url}}/assets/gta2/busted.png)
 
 Ok, time to find the places where they found us ;)<br>
 Place a Breakpoint directly on _MessageBoxA_ via "bp MessageBoxA" and hope for the best. Ok, we break and according to the message on the stack we are at the right place. Now we make our way up until we reach to a point where the function we are in is either jumped over or not. This is the case at the following location:
 
-![Debugger Check]({{site.url}}assets/gta2/debugger_check.png)
+![Debugger Check]({{site.url}}/assets/gta2/debugger_check.png)
 
 Looks like whatever happens in the call to 0x00427F10 will check for a debugger and if one is detected, we get the badboy message :(<br>
 So lets patch the function to always return false:
@@ -232,7 +232,7 @@ Of course this is what the spawned process will see and execute later, not our S
 
 Now comes the hard part: We need to attach a debugger to the game process that will be started in a few moments. If the 181 bytes that are written to the process would only contain assembly instructions, we could probably dump and copy them to the file on disc, but since the Safedisc loader has made some imports and included them in the bytes, they would be lost/meaningless and we wouldn't know which functions are called. Problem is, if we would let the game run freely, the OEP will be gone. Also, attaching to the process in the suspended state is possible, but once we resume it, the program crashes. I have no idea why it is like that. Probably because the imports are not loaded at that state or something like that. So we need to find something else. One solution is to put the process in a controlled endless loop so it will not go anywhere. The instruction for this is simply a "JMP SHORT -2" or _EB FE_ in hex. If we would put this at the place where Eip points to when the process starts it should loop forever, waiting for us to attach to it and patch in the original bytes. Unluckily I've spent a very long time figuring out why that does not work either. It always went down the wrong path:
 
-![Broken startup]({{site.url}}assets/gta2/startup.png)
+![Broken startup]({{site.url}}/assets/gta2/startup.png)
 
 Normally it should take the blue path, but it always took the jump to the end and I have no idea why. My best guess is that "dplayerx" (the Library that is loaded) is not available anymore once we we have started the second debugger or it detects that we attached to the process and now does strange things or something like that.<br>
 Anyways, the trick is to simply put the waiting loop at the end of the stub in place of the _ret_ so the party is already over when we arrive ;).<br>
@@ -242,11 +242,11 @@ Opening Scylla reveals that most imports are already correct, but there 121 brok
 
 Before:
 
-![Before]({{site.url}}assets/gta2/before.png)
+![Before]({{site.url}}/assets/gta2/before.png)
 
 After:
 
-![After]({{site.url}}assets/gta2/after.png)
+![After]({{site.url}}/assets/gta2/after.png)
 
 Well, that looks simple enough to build a nice script that basically does what we just did manually:
 
@@ -313,12 +313,12 @@ Finally we have a fully unpacked Game Exe, time to test it without the CD ;)<br>
 
 Under Windows XP the game has some issues which seem to come from the OS itself not the Game but it turns out that it's working fine under my Windows 10, but wait a minute. What is that?
 
-![CD-Check]({{site.url}}assets/gta2/cd_check.png)<br>
+![CD-Check]({{site.url}}/assets/gta2/cd_check.png)<br>
 (Please insert disc)<br><br>
 
 Looks like they added some more CD-Checks. Probably it's the same as with [GTA 1](/games/grand_theft_auto) in that they left the music on the CD and only the nessecary game files are installed to the hard drive. Ok, so open our new executeable in x32dbg and have a look around. I immedeately found three strings "no_cd1,2,3" that caught my attention. So put a BP on them and restart the game. We break and we see two jumps:
 
-![No CD]({{site.url}}assets/gta2/no_cd.png)
+![No CD]({{site.url}}/assets/gta2/no_cd.png)
 
 If you patch the first one you put the Game in some Multiplayer mode so this does not seem to be correct. It's probably the function at 004B4B90 that's checking for the CD.
 Patch it so it returns always true:
@@ -330,15 +330,15 @@ ret
 
 Now we can start the menu, but as soon as we start the game, we get a warning message:
 
-![Security Failure]({{site.url}}assets/gta2/security_failure.png)
+![Security Failure]({{site.url}}/assets/gta2/security_failure.png)
 
 So either the disc is important for the game since it needs some files or it has simply detected that we patched it. Time to figure it out :) Place a BP on _MessageBoxA_ and restart. Aha, we break and see the message on the stack - bingo. Making our way up the call stack we realize that we are in a function that starts at 0x004A10B0. This function is called from many many places, so it's probably some generic MessageBox helper function which also shuts down the game. Going one step further up the call stack we see the integrity check:
 
-![Integrity Check]({{site.url}}assets/gta2/check.png)
+![Integrity Check]({{site.url}}/assets/gta2/check.png)
 
 We restart the game, patch out the integrity check and can finally start to play. Or can't we? The game now loops and plays the same sound all over again. Ok, maybe there is more going on. Have a closer Look at the CD-Check function and the integrity check function. They both kinda look similar. They both have this interesting compare and then some timing stuff. Lets see where this function (timeGetTime) is called also.
 
-![Functions]({{site.url}}assets/gta2/functions.png)
+![Functions]({{site.url}}/assets/gta2/functions.png)
 
 From the pure look of it, it looks like the function at 0x004B8DC0 is very similar, it also uses the same value at 0x0061BF08 (whatever that is). So just for the fun, lets also patch that function to always return true.<br>
 The Game seems to run now, but something is still odd. I get no damage and other stuff is strange. But I don't know if this is due to some incompatibilities with modern systems or if they detected the presence of a crack. At that time I decided to keep it that way and go on with other games.

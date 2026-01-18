@@ -24,7 +24,7 @@ tags:
 | Tested under | Win XP & Win 10 |
 | Scene-Crack by | [RAROR1911](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=15509) / [CLASS](https://www.nfohump.com/index.php?switchto=nfos&menu=quicknav&item=viewnfo&id=15510) |
 
-![Cover]({{site.url}}assets/stronghold_crusader/cover.jpg)
+![Cover]({{site.url}}/assets/stronghold_crusader/cover.jpg)
 
 *Needed Tools:*
 
@@ -55,11 +55,11 @@ As always, let's first watch the situation from a bit further away and just let 
 
 As we can see, the situation is still as we know it from Stronghold Deluxe. Four files are created in the temp folder and one of them (~f1d055.tmp) is started as a new worker process:
 
-![Create Process]({{site.url}}assets/stronghold_crusader/create_process.png)
+![Create Process]({{site.url}}/assets/stronghold_crusader/create_process.png)
 
 Also, the OEP can still be found via searching for a "CALL EAX; POPAD; POP EBP; JMP XXX" (FFD0 61 5D EB) at the Entry Point, then following the jump twice (OEP: 0x0057901D):
 
-![OEP]({{site.url}}assets/stronghold_crusader/oep.png)
+![OEP]({{site.url}}/assets/stronghold_crusader/oep.png)
 
 So as a first step, let's try to stop the game.exe at the OEP. For that, the following steps are needed:
 
@@ -84,7 +84,7 @@ The steps that the worker-DLL perfoms to fix the game.exe are the following:
 
 This one is actually quite easy and straight forward. We go though the Text Section and look for CALLS (FF 15) that have their thunk within the IAT. If the called address is within a user module, it's very likely a SafeDisc stub. This is what the SafeDisc stub will look like:
 
-![Stub]({{site.url}}assets/gta3/call.png)
+![Stub]({{site.url}}/assets/gta3/call.png)
 
 To get to the original address, just do the following:
 
@@ -104,15 +104,15 @@ Instead of fixing the calls right away, we will first remember it in a linked li
 
 If you've read the [Stronghold Deluxe article](/games/stronghold_deluxe), you may remember the relayed calls to user code. They consist of a setup stub:
 
-![Setup]({{site.url}}assets/stronghold_deluxe/lookup_setup.png)
+![Setup]({{site.url}}/assets/stronghold_deluxe/lookup_setup.png)
 
 followed by a lookup stub:
 
-![Lookup]({{site.url}}assets/stronghold_deluxe/lookup.png)
+![Lookup]({{site.url}}/assets/stronghold_deluxe/lookup.png)
 
 and then the classic stub:
 
-![Stub]({{site.url}}assets/stronghold_deluxe/stub.png)
+![Stub]({{site.url}}/assets/stronghold_deluxe/stub.png)
 
 To fix them, this is what I did:
 
@@ -132,7 +132,7 @@ From there we can use the same trick as before:
 
 At one point I faced the same issue as I had with all the SafeDisc versions before: CALLs after a RET:
 
-![Call after RET]({{site.url}}assets/stronghold_crusader/call_after_ret.png)
+![Call after RET]({{site.url}}/assets/stronghold_crusader/call_after_ret.png)
 
 My current theory is that they were placed in the empty space between compilation units that usually gets filled with NOPs (or INT3s or zeros). If the space is larger than 5 Bytes, a CALL was placed there and if we try to restore the CALL, it first looks like everything is working normal, but upon the next valid CALL, the CALL address is ofsetted by 6 bytes. So either these CALLs were never intended to be called or they are placed there to fool us. Anyways, as always, let's add a check to not repair a CALL directly after a RET (C3 and C2). For more details, see _FixRelayedUserCodeCalls_.
 
@@ -140,7 +140,7 @@ My current theory is that they were placed in the empty space between compilatio
 
 A different way to CALL a remote procedure is via a Register CALL:
 
-![Call after RET]({{site.url}}assets/stronghold_crusader/register_call.png)
+![Call after RET]({{site.url}}/assets/stronghold_crusader/register_call.png)
 
 They are easy to fix, the only challenge beeing the different sizes (e.g. a MOV EAX is 5 bytes, a MOV EBX is 6 bytes). Besides that the algorithm is nearly the same as for the 'normal' CALLs:
 
@@ -154,7 +154,7 @@ For the details, see _FixRegisterCalls_.
 
 A third type of CALLs are actually JMPs that jump to a location in the IAT, hence also land in a remote procedure. We can easily fix them via the methods we already have, we just need to adapt the searchpattern (FF 25).
 
-![JMP CALL]({{site.url}}assets/stronghold_crusader/jmp_call.png)
+![JMP CALL]({{site.url}}/assets/stronghold_crusader/jmp_call.png)
 
 For the details, see _FixJMPCalls_.
 
@@ -162,13 +162,13 @@ For the details, see _FixJMPCalls_.
 
 Another type of intermodular CALLs in disguise are far JMPs (E9) that go to the SafeDisc section:
 
-![Far JMP]({{site.url}}assets/stronghold_crusader/far_jmp.png)
+![Far JMP]({{site.url}}/assets/stronghold_crusader/far_jmp.png)
 
 Then perform a call and a lookup:
 
-![Far JMP Call]({{site.url}}assets/stronghold_crusader/far_jmp_call.png)
+![Far JMP Call]({{site.url}}/assets/stronghold_crusader/far_jmp_call.png)
 
-![Far JMP Lookup]({{site.url}}assets/stronghold_crusader/far_jmp_lookup.png)
+![Far JMP Lookup]({{site.url}}/assets/stronghold_crusader/far_jmp_lookup.png)
 
 And then end up in the stub. Again, they are easy to fix. Simply search for all JMPs and check if they go to the SafeDisc section. Place EIP on the CALL, single step until PUSHFD, proceed as seen before.<br>
 
@@ -181,7 +181,7 @@ For a more indepth explanation on Nanomites have a look at the [Stronghold Delux
 Last time, I used W4kfu's approach to simply spawn a thread on the Nanomites to let the SafeDisc-Worker do the job for us.<br>
 That worked somewhat well and I got to the point where the game was probably 95% Nanomite-free, I could start up the game and it would play fine. But upon scrolling through the code, I sometimes found new instructions that would cause an exception, hence a Nanomite and there were also quite a few whacky checks needed to make sure to not spwan a thread on something that might look like a Nanomite in the first place, but turned out to be random data in the end, since this would stop the SafeDisc worker from repairing the Nanomites at all. For example have a look at the following instruction:
 
-![False Positive]({{site.url}}assets/stronghold_crusader/false_positive.png)
+![False Positive]({{site.url}}/assets/stronghold_crusader/false_positive.png)
 
 If you use a searchpattern to find three consecutive INT3, you will find this address which actually contains a harmless MOV EAX. And if you spwan a thread on too many of these false-positives, the worker completely stops recovering the Nanomites.<br>
 
@@ -197,7 +197,7 @@ I had no concrete idea where to look for the Nanomites and the underlaying code,
 
 I had added a lot of debug output to my injected DLL, so I was able to see where it tried to spawn a thread on a possible Nanomite etc. which helped me to understand the SafeDisc code a bit better. The first thing I found out is that _RestoreNanomite_ receives (as the last parameter) the address of where the exception happended. From that, the ImageBase is subtracted to get the RVA, probably to also work with ASLR. Then, some secret is calculated from three values. My guess is that two of these values do not change across different games and one is unique for each game, but we will see that in the future. You can find the code right at the start of _RestoreNanomite_ in the first call at 0x00AAC5CB:
 
-![Secret]({{site.url}}assets/stronghold_crusader/secret.png)
+![Secret]({{site.url}}/assets/stronghold_crusader/secret.png)
 
 The code in the routine looks like the following (simplified):
 
@@ -235,7 +235,7 @@ DWORD secret = 0x97878A83 * rva;
 
 The corresponding code can be found a few lines below:
 
-![Secret Final]({{site.url}}assets/stronghold_crusader/secret_final.png)
+![Secret Final]({{site.url}}/assets/stronghold_crusader/secret_final.png)
 
 The RVA and the salt are then placed in an 8 Byte long buffer and then 3 functions follow. Via searching the net for some constants that are used in the functions, I was able to identify them as classic MD5 hashing routines. So we end up with:
 
@@ -254,7 +254,7 @@ md5_finalize(hash, &md5);
 
 In the real code, the two DWORDs were hashed one after another, but the above code is equivalent:
 
-![MD5]({{site.url}}assets/stronghold_crusader/md5.png)
+![MD5]({{site.url}}/assets/stronghold_crusader/md5.png)
 
 Then some shuffling-around of the bytes in the hash buffer takes place, which turned out to be a complicated version of the following code:
 
@@ -267,7 +267,7 @@ DWORD checksum = *(DWORD*)&md5.digest[3 * sizeof(DWORD)];
 
 So actually nothing special. The hash is simply divided into 4 DWORDs, but the lookup key is in big-endian byte order. We will see their meaning in a short moment. Once the _lookupKey_ is extracted, a CALL at 0x00AAC6DC follows which is where all the fun stuff happens and which took me the longest time to understand.
 
-![Get Nanomite Data]({{site.url}}assets/stronghold_crusader/get_nanomite_data.png)
+![Get Nanomite Data]({{site.url}}/assets/stronghold_crusader/get_nanomite_data.png)
 
 I will spare you with the cruel details, but this is what happends:<br>
 
@@ -298,7 +298,7 @@ for (SIZE_T b = 0; b < 16; b++)
 
 They _decryptKey_ is the one we saw earlier (bytes 4..7 from the hash). You can see this in action starting at 0x00AAC743:
 
-![Decryption]({{site.url}}assets/stronghold_crusader/decryption.png)
+![Decryption]({{site.url}}/assets/stronghold_crusader/decryption.png)
 
 So, what have we actually decrypted? The 16 bytes are another struct of the following form:
 
@@ -342,11 +342,11 @@ typedef struct
 
 So basicly the nodeValue (lookup/key) followed by the 16 encrypted data bytes. How do I know it's 100? You can find that value hard-coded in the routine starting at 0x00A9CAFB which is the routine that will build up the tree and iterated over the raw data array. You will also find the starting address of the array there:
 
-![Number of Nanomites]({{site.url}}assets/stronghold_crusader/num_nanomites.png)
+![Number of Nanomites]({{site.url}}/assets/stronghold_crusader/num_nanomites.png)
 
 The array itself is not encrypted, you can have a look at it with a hex editor at raw file offset 0x56AC:
 
-![Raw Data]({{site.url}}assets/stronghold_crusader/raw_data.png)
+![Raw Data]({{site.url}}/assets/stronghold_crusader/raw_data.png)
 
 As an example, the address associated with the first lookupKey (0xBA39358D) is 0x0047E072. Why?
 
@@ -396,11 +396,11 @@ By the way, the _gameSecret_ (0x000000F7) I talked about earlier is located dire
 
 Before:
 
-![Before]({{site.url}}assets/stronghold_crusader/before.png)
+![Before]({{site.url}}/assets/stronghold_crusader/before.png)
 
 After:
 
-![After]({{site.url}}assets/stronghold_crusader/after.png)
+![After]({{site.url}}/assets/stronghold_crusader/after.png)
 
 As you can see, since we only care for a matching _nodeValue_, there is no need to build or traverse a searchtree, we could actually perform a sequential search on the raw data array. As for the last question, on how we can get back the original addresses of the Nanomites, there is no simple answer. We need to check every address in the text section, calculate the hash and search for the lookup value. Luckily today's computers are quite fast and we can speed up things a bit if we rule out (some) instructions that will not produce an exception. But on my machine that was not needed since the whole process takes about five seconds. The only optimization I made to prevent a sequential search was to use a simple hashmap to make the lookup in O(1).<br>
 

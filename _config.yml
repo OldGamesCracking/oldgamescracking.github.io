@@ -4,11 +4,11 @@ plugins:
 
 title: OldGamesCracking
 description: To unprotect and to preserve
-url: https://oldgamescracking.github.io/
+url: https://oldgamescracking.github.io
 
 author:
   name: 'OldGamesCracking'
-  url: https://oldgamescracking.github.io/
+  url: https://oldgamescracking.github.io
   email: oldgamescracking@gmail.com
 
 show_downloads: false

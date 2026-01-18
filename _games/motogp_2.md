@@ -22,7 +22,7 @@ tags:
 | Tested under | Win 10 |
 | Scene-Crack by | ??? |
 
-![Cover]({{site.url}}assets/motogp_2/cover.jpg)
+![Cover]({{site.url}}/assets/motogp_2/cover.jpg)
 
 *Needed Tools:*
 
@@ -44,28 +44,28 @@ By browsing the list of supported protections that [BinaryObjectScanner](https:/
 
 If we start the game via the _motogp2.exe_ without the CD inserted, we instantly get a warning:
 
-![CD Check]({{site.url}}assets/motogp_2/cd.png)
+![CD Check]({{site.url}}/assets/motogp_2/cd.png)
 
 This is nice since - judging by the speed the messagebox popped up - it means that usually the check is quite simple. Time to attach the debugger and have a look around:
 
-![Message Box]({{site.url}}assets/motogp_2/messagebox.png)
+![Message Box]({{site.url}}/assets/motogp_2/messagebox.png)
 
 The messagebox call is easy to find and if you scroll up a bit you will notice quite fast, that the call at 0x0041A20B checks if the file _elf.42_ is present in the game dir and if not, it gets the path of the CD drive with which you installed the game via the registry (0x0041A22B) and then searches the file on the disc (0x0041A282).
 
-![Message Box]({{site.url}}assets/motogp_2/calls.png)
+![Message Box]({{site.url}}/assets/motogp_2/calls.png)
 
 So, let's copy that file from the disc to the install dir and start the game.<br>
 It first starts up nicely but as soon as we try to start a game, a nagscreen pops up:
 
-![No CD]({{site.url}}assets/motogp_2/no_cd.png)
+![No CD]({{site.url}}/assets/motogp_2/no_cd.png)
 
 I then put a breakpoint on a few things and figured out, that the _CDPath_ registry key we saw earlier is also used here:
 
-![CD Path]({{site.url}}assets/motogp_2/cdpath.png)
+![CD Path]({{site.url}}/assets/motogp_2/cdpath.png)
 
 So, let's have a look at that in RegEdit:
 
-![RegEdit]({{site.url}}assets/motogp_2/regedit.png)
+![RegEdit]({{site.url}}/assets/motogp_2/regedit.png)
 
 Well, why not change the path to the same as _InstallPath_? That works surprisingly well and the nagscreen is gone ;)<br>
 

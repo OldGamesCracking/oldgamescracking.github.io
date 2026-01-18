@@ -43,13 +43,13 @@ By the way, you can get it on GOG.com, Steam and [archive.org](https://archive.o
 
 The game won't run properly on my Win 10 machine, but at least I can get to the main menu with the CD inserted and without it gives me an error message, so I guess that's enough to crack it ;)<br>
 
-![No disc]({{site.url}}assets/hexplore/no_disc.png)
+![No disc]({{site.url}}/assets/hexplore/no_disc.png)
 
 As always, start by loading the _hexplore.exe_ in x32dbg and try to find the error message and then work your way back. By the way, you should disable ScyllaHide or it will spoil the fun ;) For the start, pass all exceptions to the game and place a breakpoint on _MessageBoxA_ via _'bp MessageBoxA'_. You should find the CALL at 00433B76. If you put a software breakpoint directly on the call, the game will hang which is probably a sign that an integrity-check or a debug-check is taking place somewhere. To understand the protection a bit better, remove the software breakpoint and place a hardware breakpoint 'on access' at 00433B76 and hit F9.<br><br>
 
 Aaaand we break ... somewhere 🤔
 
-![Unknown breakpoint]({{site.url}}assets/hexplore/breakpoint.png)
+![Unknown breakpoint]({{site.url}}/assets/hexplore/breakpoint.png)
 
 Have a look around, a few lines above is something you should have seen before:
 
@@ -299,11 +299,11 @@ By the way, the code is mainly my own recreation and is not 1:1 the same but the
 
 Next up we have a small routine starting at 00435CF1 that will decrypt 30 bytes at 0x58D488 (I called it expected\_volume\_identifier) with the bytes starting at 0x58D489. The resulting data is a string containing "Hexplore".
 
-![Volume Identifier]({{site.url}}assets/hexplore/volume_identifier.png)
+![Volume Identifier]({{site.url}}/assets/hexplore/volume_identifier.png)
 
 Next up we will see that the _first_ value that _GNOCD32_ returned is used to create a string of the following form: "\\\\.\\\letter:" which is then used in conjunction with _CreateFileA_ to open the drive as a raw device.
 
-![Raw Access]({{site.url}}assets/hexplore/raw_access.png)
+![Raw Access]({{site.url}}/assets/hexplore/raw_access.png)
 
 The returned handle is then given to _GDS32_ that checks if a CD is present. So from now on we need a CD in the drive (or an image as we will see later).
 
@@ -692,7 +692,7 @@ So it looks like they managed to construct the values in the lookup so that alwa
 
 For those of you who are playing along at home, this is the final result (24 sector addresses):
 
-![Sectors]({{site.url}}assets/hexplore/sectors.png)
+![Sectors]({{site.url}}/assets/hexplore/sectors.png)
 
 But, what are these addresses? We'll see later let's first have a look at _LD32_ down the line:
 
@@ -833,7 +833,7 @@ The next CALL will simply check the integrity of the decryption (which will of c
 
 By the way, if you wonder when the STATUS_ACCESS_VIOLATION-branch of the SEH will kick in (if you haven't already figured out because you program crashed), have a look at the CALL to 00434B50 at 00434887. In there are strange instructions:
 
-![Exception]({{site.url}}assets/hexplore/exception.png)
+![Exception]({{site.url}}/assets/hexplore/exception.png)
 
 This will trigger an exception and we land in the SEH, but this time in the _STATUS\_ACCESS\_VIOLATION_ branch:
 
@@ -864,17 +864,17 @@ Ok, back on topic. We are nearly there. We finally land at the exit function, th
 WOW! What a journey. You can now dump the game with Scylla (use the normal result, not the advanced one: VA: 00595250, Size: 000001BC), get a bunch of errors and after some digging you find out, that Microsoft has replaced some of the original functions with some place-ins to increase compatibility but decrease debugability :)<br>
 I fixed them manually by having a look at the addresses. Sometimes you can already see Debug Strings with the name of the function, sometimes you need to set the EIP to the import manually and step in a but, most of the time the name pops up somewhere quite fast.
 
-![Fixing IAT]({{site.url}}assets/hexplore/imports.png)
+![Fixing IAT]({{site.url}}/assets/hexplore/imports.png)
 
 After all is fixed and dumped, remove the CD, start the dumped exe and you are greeted with one last enemy:
 
-![Last Stand]({{site.url}}assets/hexplore/cd_check.png)
+![Last Stand]({{site.url}}/assets/hexplore/cd_check.png)
 
 I leave that to you to figure this out, it's really easy ;)<br><br>
 
 But wait a minute, there is one last thing that comes to my mind. What was the last instruction? _JMP EAX_ ?
 
-![JMP]({{site.url}}assets/hexplore/jmp.jpg)
+![JMP]({{site.url}}/assets/hexplore/jmp.jpg)
 
 Oh, come on! They did not encrypt that part? So all we had to do was:
 
