@@ -13,6 +13,10 @@ If you are new to the topic, I recommed reading the articles in the following or
 - Just CD-Checks
 - Audio on Disc
 
+[Kreed](https://oldgamescracking.github.io/games/kreed)
+
+- Very simple packer
+
 # Easy
 
 [Hexplore](https://oldgamescracking.github.io/games/hexplore)
