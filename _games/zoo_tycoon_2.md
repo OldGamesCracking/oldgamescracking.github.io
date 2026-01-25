@@ -61,4 +61,6 @@ Now that we know where the OEP is, let's put a HW BP there, restart the program 
 
 That's it. I hope there are no late checks in the game, but upon playing for a few minutes, I could not find anything unusual.<br><br>
 
+By the way: Age of Empires III - and probably some others - can be cracked in the exact same manner.
+
 * * *
