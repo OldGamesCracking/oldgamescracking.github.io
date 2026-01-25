@@ -1,0 +1,39 @@
+; Get this address with the method described in the article
+$imports_start = 0x007AC764
+
+$imports_len = dword:[$imports_start - 4]
+log "imports_len {p:$imports_len}"
+$image_base = scom.exe:imagebase
+log "image_base {p:$image_base}"
+
+$return_addr = $imports_start
+$call_idx = 0
+
+loop:
+$thunk_addr = $return_addr + 4
+cmp $call_idx, $imports_len
+je end
+$call_from = dword:[$return_addr] - 4 + $image_base
+log "call_from {p:$call_from}"
+$call_to = dword:[$thunk_addr] + $image_base
+cmp $call_to, 0x7fffffff
+ja is_jmp
+
+normal_call:
+log "call_to {p:$call_to}"
+dword:[$call_from] = $call_to
+jmp next
+
+is_jmp:
+$call_to &= 0x7fffffff
+log "JMP CALL to {p:$call_to}"
+dword:[$call_from] = $call_to
+; Change CALL to JMP
+byte:[$call_from - 1] = 0x25
+
+next:
+$return_addr += 8
+$call_idx += 1
+jmp loop
+
+end:

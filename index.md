@@ -27,3 +27,4 @@ layout: default
 - [Stronghold Crusader (SafeDisc v2.70)](/games/stronghold_crusader)
 - [Harry Potter and the Chamber of Secrets (SafeDisc v2.80)](/games/harry_potter_2)
 - [Kreed (3PLock)](/games/kreed)
+- [Stealth Combat (Laserlock v5)](/games/stealth_combat)

@@ -1,0 +1,15 @@
+; Remove breakpoint on the entry point of the SEH handler
+bpc eip
+; Get address of EIP within CONTEXT block
+$eip_ctx_addr = dword:[esp+0x0c] + 0xb8
+; Breakpoint on return address
+$ret_addr = dword:[esp]
+bp $ret_addr
+run
+bpc $ret_addr
+; Find out the address of the altered EIP
+$eip_new = dword:[$eip_ctx_addr]
+; Break there
+bp $eip_new
+run
+bpc $eip_new

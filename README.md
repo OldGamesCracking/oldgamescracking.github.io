@@ -36,6 +36,13 @@ If you are new to the topic, I recommed reading the articles in the following or
 
 - No real cracking needed
 
+[Stealth Combat](https://oldgamescracking.github.io/games/stealth_combat)
+
+- Basic packer/cryptor
+- No anti-debugging
+- Messed up program flow via exceptions
+- Easily repairable imports
+
 # Medium
 
 [Zoo Tycoon 2](https://oldgamescracking.github.io/games/zoo_tycoon_2)
