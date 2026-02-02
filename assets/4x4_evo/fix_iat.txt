@@ -1,0 +1,48 @@
+; Config
+$iat_start = 0x005B9440
+$iat_size = 0x00000360
+
+$iat_end = $iat_start + $iat_size
+$thunk = $iat_start
+
+loop:
+cmp $thunk, $iat_end
+je end
+
+$proc = dword:[$thunk]
+
+cmp $proc, 0
+je nofix
+
+cmp $proc, 0x1000000
+jae nofix
+
+log "Broken thunk at {p:$thunk}, stolen bytes are at {p:$proc}"
+
+$instruction = $proc
+
+search_end_of_stub:
+
+cmp byte:[$instruction], 0
+je search_done
+
+; Go to next instruction
+$instruction += dis.len($instruction)
+jmp search_end_of_stub
+
+search_done:
+; Subtract the jmp
+$last_instruction = instruction - 5
+$stub_len = $last_instruction - $proc
+$original_proc_at = $last_instruction + dword:[$last_instruction + 1] + 5 - $stub_len
+
+log "{u:$stub_len} bytes are stolen, original proc at {p:$original_proc_at}"
+
+dword:[$thunk] = $original_proc_at
+
+nofix:
+$thunk += 4
+
+jmp loop
+
+end:

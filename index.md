@@ -28,3 +28,4 @@ layout: default
 - [Harry Potter and the Chamber of Secrets (SafeDisc v2.80)](/games/harry_potter_2)
 - [Kreed (3PLock)](/games/kreed)
 - [Stealth Combat (Laserlock v5)](/games/stealth_combat)
+- [4x4 Evo (CopyLok / CodeLok v2.20)](/games/4x4_evo)

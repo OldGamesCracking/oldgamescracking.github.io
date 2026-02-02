@@ -43,6 +43,13 @@ If you are new to the topic, I recommed reading the articles in the following or
 - Messed up program flow via exceptions
 - Easily repairable imports
 
+[4x4 Evo](https://oldgamescracking.github.io/games/4x4_evo)
+
+- Basic packer/cryptor
+- No anti-debugging
+- Messed up program flow via exceptions
+- Easily repairable imports
+
 # Medium
 
 [Zoo Tycoon 2](https://oldgamescracking.github.io/games/zoo_tycoon_2)
