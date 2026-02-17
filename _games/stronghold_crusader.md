@@ -287,6 +287,8 @@ typedef struct node
 
 Judging by the general appearence of the node structure, I think it's some kind of Red-Black tree or 2–3–4 tree, but I'm not an expert on trees ;) All we need to know is that a valid Nanomite will always be found in the tree and if so, the pointer to the data buffer is returned which points to a 16-Byte array.<br>
 
+**Sidenote on 02/2026**: I'm mainly a C-Guy and not super into C++, but I'm now somewhat sure that simply a _std::map<DWORD, BYTE*>_ was used.<br>
+
 This array is then decrypted via the following algorithm:
 
 ```c
