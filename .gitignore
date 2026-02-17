@@ -1,4 +1,5 @@
 _site/
+.vscode/
 assets/simple_injector/Release/
 assets/simple_injector/.vs/
 

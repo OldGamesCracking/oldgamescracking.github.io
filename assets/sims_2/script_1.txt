@@ -1,0 +1,43 @@
+; Clear all BP
+bpc
+bphwc
+
+; Set up counter
+$addr_VirtualProtect = VirtualProtect
+bphws $addr_VirtualProtect, x, 1
+SetHardwareBreakpointSilent $addr_VirtualProtect, 1
+
+; Kill PEB-Checks
+$peb_addr = peb()
+byte:[$peb_addr + 2] = 0
+
+; Set up anti ProcessDebugPort
+$addr_NtQueryInformationProcess = NtQueryInformationProcess
+bphws $addr_NtQueryInformationProcess, x, 1
+bphwcond $addr_NtQueryInformationProcess, "arg.get(1)==7"
+SetHardwareBreakpointSilent $addr_NtQueryInformationProcess, 1
+
+
+$counter = 0
+
+loop:
+	erun
+	cmp eip, $addr_VirtualProtect
+	je inc_counter
+	cmp eip, $addr_NtQueryInformationProcess
+	jne end
+	$pi = dword:[esp+0x0C]
+	rtr
+	dword:[$pi] = 0
+	jmp loop
+	
+inc_counter:
+	$counter += 1
+	cmp $counter, 0x11000
+	jb loop
+	$from = dword:[esp]
+	$lpAddress = arg.get(0)
+	log "#{u:$counter} VirtualProtect @ {p:$lpAddress} from {p:$from}"
+	jmp loop
+
+end:

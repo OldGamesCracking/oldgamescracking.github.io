@@ -29,3 +29,4 @@ layout: default
 - [Kreed (3PLock)](/games/kreed)
 - [Stealth Combat (Laserlock v5)](/games/stealth_combat)
 - [4x4 Evo (CopyLok / CodeLok v2.20)](/games/4x4_evo)
+- [The Sims 2 - Part I (SafeDisc v3.20, Findig the OEP)](/games/sims_2_part_1)
