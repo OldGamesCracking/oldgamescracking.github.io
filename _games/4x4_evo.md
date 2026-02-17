@@ -140,12 +140,13 @@ When we try to dump the game now, we have some invalid imports. Having a short l
 
 ![]({{site.url}}/assets/4x4_evo/stolen_bytes.png)
 
-So, a few instructions and then a JMP to the original proc.<br>
+So, a few random instructions and then a JMP to the original proc.<br>
 For reference, the original proc looks like the following:
 
 ![]({{site.url}}/assets/4x4_evo/proc.png)
 
-In this example the first 2 instructions (7 bytes) were 'stolen' and placed in an external buffer. Folling the two instructions a jump was installed that jumps back to the third instruction in the original proc (at 0x755A8777).<br>
+See that? The first two instructions were 'stolen' from the original function and placed in the temp buffer. In this example the first 2 instructions (7 bytes) were 'stolen'. Following the two instructions a jump was installed that jumps back to the third instruction in the original proc (at 0x755A8777).<br>
+This is probably the reason why a breakpoint on the original function does not trigger, as it is never executed.<br>
 
 Luckily for us, this is easiy repairable via script:
 
