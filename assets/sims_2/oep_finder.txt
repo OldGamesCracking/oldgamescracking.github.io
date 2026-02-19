@@ -1,0 +1,66 @@
+; SafeDisc v3.20 OEP Finder
+; Tested with:
+;	- The Sims 2
+; Probably works since v2.x
+; Use Scylla to hide debugger
+; Pass all exceptions
+
+bpc
+bphwc
+
+; Find Tail jump
+; call eax; popad; pop ebp; jmp ??
+find eip, FFD0615DEB
+cmp $RESULT, 0
+je error_msg
+$oep_jmp_offset = byte:[$RESULT + 5]
+$oep_jmp_address = $RESULT + 4 + $oep_jmp_offset + 2
+$oep_jmp_offset = dword:[$oep_jmp_address + 1]
+$oep_address = $oep_jmp_address + $oep_jmp_offset + 5
+log "OEP jump at {p:$oep_jmp_address}"
+log "OEP at {p:$oep_address}"
+
+; Wait for the BLT event to be created
+$addr_CreateEventA = CreateEventA
+bphws $addr_CreateEventA
+bphwcond $addr_CreateEventA, "stristr(utf8(arg.get(3)), \"BLT_\") == 1"
+
+erun
+
+bphwc $addr_CreateEventA
+
+; Remember the handle
+rtr
+$event_handle = eax
+
+; Wait for process to wait for event
+$addr_WaitForSingleObject = WaitForSingleObject
+bphws $addr_WaitForSingleObject
+bphwcond $addr_WaitForSingleObject, "arg.get(0) == $event_handle"
+
+erun
+
+bphwc $addr_WaitForSingleObject
+
+; Set dwMilliseconds to zero
+dword:[esp+8] = 0
+
+; Set return value to zero (WAIT_OBJECT_0)
+rtr
+eax = 0
+
+; We can finally break on the OEP
+bphws $oep_address, x, 1
+
+erun
+
+bphwc $oep_address
+
+cmt $oep_address, "<-- OEP ;)"
+msg "You should be at the OEP now :)"
+jmp end
+
+error_msg:
+	error "Could not find OEP :("
+
+end:
