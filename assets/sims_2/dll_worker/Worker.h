@@ -6,7 +6,6 @@
 #include "Modules.h"
 #include "Imports.h"
 #include "CodeExplorer.h"
-#include "Recovery.h"
 #include "hooking.h"
 #include "SafeDiscHelper.h"
 
@@ -34,8 +33,7 @@ enum class ExplorationStepAction
 {
 	None,
 	Done,
-	Nanomite,
-	Stub
+	Nanomite
 };
 
 class Worker
@@ -51,7 +49,6 @@ private:
 	void PatchNanomitesJump();
 	void ReadTextSection();
 	void InitImports();
-	void InitRecovery();
 	void InitExplorer();
 
 	void FixImports();
@@ -81,7 +78,7 @@ private:
 	std::set<DWORD> DeadEnds;
 
 public:
-	~Worker();
+	~Worker() = default;
 	
 	void InitProcessData(DWORD dwProcessId);
 	void InitMainThread(DWORD dwThreadId);
@@ -131,9 +128,6 @@ public:
 	ZyanU64 EventAddress;
 
 	Imports Imports;
-
-	RecoveryFile *Recovery = nullptr;
-	bool RestoreRecovery = true;
 
 	HOOK_t hook_ReadProcessMemory;
 	HOOK_t hook_WriteProcessMemory;

@@ -10,15 +10,6 @@
 #include "ProcessHelper.h"
 #include "MyDebugger.h"
 
-Worker::~Worker()
-{
-    if (Recovery != nullptr)
-    {
-        delete Recovery;
-
-        Recovery = nullptr;
-    }
-}
 
 void Worker::PrintProcName(Module *Mod, Proc *Proc, bool Newline)
 {
@@ -260,7 +251,6 @@ void Worker::StartFixing()
     PatchNanomitesJump();
     ReadTextSection();
     InitImports();
-    InitRecovery();
     InitExplorer();
 
     LastAction = ExplorationStepAction::None;
@@ -438,43 +428,6 @@ void Worker::FixImports()
     Log.Line("Calls restored", IATEntries);
 }
 
-void Worker::InitRecovery()
-{
-    Recovery = new RecoveryFile("recovery.bin");
-    Recovery->AutoDump = true;
-
-    if (!RestoreRecovery)
-    {
-        return;
-    }
-
-    Log.Line("Restoring Recovery");
-
-    ProcessHelper p(hProcess);
-
-    for (auto record : Recovery->Records())
-    {
-        uint32_t Len = record->Len();
-        ZyanU64 Address = record->Address();
-
-        if ((TextSectionStart <= Address) && ((Address + Len) <= TextSectionEnd))
-        {
-            Log.Line("Restoring %d bytes @ %08X", Len, (uint32_t)Address);
-
-            const uint8_t *const Buffer = record->Buffer();
-
-            auto bufferOffset = Address2BufferOffset((LPVOID)Address);
-            memcpy(&TextSectionBuffer[bufferOffset], Buffer, Len);
-
-            p.WriteMemory((LPVOID)Address, (PBYTE)Buffer, Len);
-        }
-        else
-        {
-            Log.Warning("Could not restore %d bytes @ %08X", Len, (uint32_t)Address);
-        }
-    }
-}
-
 void Worker::InitExplorer()
 {
     Explorer = new CodeExplorer(TextSectionBuffer, TextSectionStart, TextSectionEnd, IAT_START, IAT_END);
@@ -543,8 +496,6 @@ bool Worker::HandleWriteProcessMemory(LPVOID lpBaseAddress, LPCVOID lpBuffer, SI
             Log.Warning("Address is higher than expected");
         }
     }
-
-    Recovery->AddRecord((ZyanU64)lpBaseAddress, (const uint8_t *const)lpBuffer, nSize);
 
     auto bufferOffset = Address2BufferOffset(lpBaseAddress);
     auto remaining = Address2Remaining(lpBaseAddress);
@@ -765,8 +716,6 @@ void Worker::ProbeVMInstructions()
             return;
         }
 
-        Recovery->AddRecord(EventAddress, &instruction_buffer[0], instruction_length);
-
         auto bufferOffset = Address2BufferOffset((LPVOID)EventAddress);
 
         memcpy(&TextSectionBuffer[bufferOffset], &instruction_buffer[0], instruction_length);
@@ -868,8 +817,6 @@ size_t Worker::RecoverVMInstructions_Inner(DWORD address)
         {
             Log.Warning("Unexpected instruction length");
         }
-
-        Recovery->AddRecord(address, &instruction_buffer[0], instruction_length);
 
         auto bufferOffset = Address2BufferOffset((LPVOID)address);
 
@@ -1009,8 +956,6 @@ size_t Worker::RecoverVMInstructions(ZyanU64 address)
     {
         Log.Log("%02X%s", buffer[i], (((i + 1) < numBytes) ? " ": "\n"));
     }
-
-    Recovery->AddRecord(address, buffer, numBytes);
 
     memcpy(&TextSectionBuffer[bufferOffset], buffer, numBytes);
 

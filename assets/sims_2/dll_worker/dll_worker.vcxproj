@@ -165,7 +165,6 @@
     <ClInclude Include="Modules.h" />
     <ClInclude Include="MyDebugger.h" />
     <ClInclude Include="ProcessHelper.h" />
-    <ClInclude Include="Recovery.h" />
     <ClInclude Include="SafeDiscHelper.h" />
     <ClInclude Include="Worker.h" />
   </ItemGroup>
@@ -180,7 +179,6 @@
     <ClCompile Include="Modules.cpp" />
     <ClCompile Include="MyDebugger.cpp" />
     <ClCompile Include="ProcessHelper.cpp" />
-    <ClCompile Include="Recovery.cpp" />
     <ClCompile Include="SafeDiscHelper.cpp" />
     <ClCompile Include="Worker.cpp" />
   </ItemGroup>
