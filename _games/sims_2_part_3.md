@@ -253,4 +253,29 @@ But then another question arises immedeately: How do we actually find all Nanomi
 
 Ok, so a simple searchpattern won't help us and parsing the instructions to find the `INT3` won't help us either. We need something a bit more advanced. In [Part 4](/games/sims_2_part_4) we will talk a bit about the aproach I came up with.
 
+# Aftermath
+
+While working on my tool and looking through the logs, I realized that even with the patch from above after some while, the Nanomites stopped beeing restored. It took me some time to figure out the cause, but enventually I figured out that actually two more patches are needed.<br>
+
+First, there is a counter that will increase for every `INT3` that turns out to be something else but not a Nanomite. We need to make sure to prevent this counter from increasing. This is a bit in contrast to what I said previously, because if we can reset the counter, why bother whith finding only 'good' Nanomites in the first place? Well, the answer is simple: I tried to avoid finding 'bad' Nanomites, but that turned out to be somewhat complicated so in the end I opted to go with a 'best effort' approach and for everything else, I fall back tho this patch.
+The patch is simple, just skip this call. Inside the call, the counter is incremented:
+
+![]({{site.url}}/assets/sims_2/nanomites_jump2.png)
+
+Or in other words:
+
+```c
+*(WORD*)0x667257B8 = (WORD)0x08EB;
+```
+
+The second thing we need to handle is the fact that there is a limit on how many Nanomites are written back. After the limit has been reached, no more Nanomites will be written back and instead they will only be emulated. I found out that the counter is incremented here:
+
+![]({{site.url}}/assets/sims_2/nanomites_increment.png)
+
+Simply also jump that instruction:
+
+```c
+*(WORD*)0x6672CFFD = (WORD)0x01EB;
+```
+
 ***
