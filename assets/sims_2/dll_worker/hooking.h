@@ -5,21 +5,28 @@
 #include <Windows.h>
 
 
-typedef struct
+class Hook
 {
-	FARPROC proc;
+private:
+	BOOL Install_Internal(FARPROC Proc, LPVOID Callback);
+
+	FARPROC Proc = NULL;
+	SIZE_T OpcodesLen = 0;
+	LPVOID Callback = NULL;
+	BOOL Enabled = FALSE;
+
+public:
+	Hook() = default;
+	~Hook();
+
+	BOOL Install(LPCSTR Module, LPCSTR Proc, LPVOID Callback);
+	BOOL Install_Raw(FARPROC Proc, LPVOID Callback);
+	BOOL Uninstall();
+	BOOL Enable();
+	BOOL Pause();
+
 	union {
-		LPVOID resume;
-		LPBYTE opcodesBuffer;
+		LPVOID Resume;
+		LPBYTE OpcodesBuffer;
 	};
-	SIZE_T opcodesLen;
-	LPVOID callback;
-	BOOL enabled;
-} HOOK_t;
-
-
-BOOL hook_install(LPCSTR module, LPCSTR proc, LPVOID callback, HOOK_t *const in_out_hook);
-BOOL hook_install_raw(FARPROC proc, LPVOID callback, HOOK_t *const in_out_hook);
-BOOL hook_uninstall(HOOK_t *const hook);
-BOOL hook_disable_fast(HOOK_t *const hook);
-BOOL hook_enable_fast(HOOK_t *const hook);
+};

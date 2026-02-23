@@ -51,16 +51,16 @@ void Worker::PrintProcName(DWORD Address, bool Newline)
 
 void Worker::PauseHooks()
 {
-    hook_disable_fast(&hook_ContinueDebugEvent);
-    hook_disable_fast(&hook_WaitForDebugEvent);
-    hook_disable_fast(&hook_WriteProcessMemory);
+    hook_ContinueDebugEvent.Pause();
+    hook_WaitForDebugEvent.Pause();
+    hook_WriteProcessMemory.Pause();
 }
 
 void Worker::ResumeHooks()
 {
-    hook_enable_fast(&hook_ContinueDebugEvent);
-    hook_enable_fast(&hook_WaitForDebugEvent);
-    hook_enable_fast(&hook_WriteProcessMemory);
+    hook_ContinueDebugEvent.Enable();
+    hook_WaitForDebugEvent.Enable();
+    hook_WriteProcessMemory.Enable();
 }
 
 void Worker::InitEntryPoints()
@@ -460,7 +460,7 @@ void Worker::InitExplorer()
 
 bool Worker::HandleReadProcessMemory(LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T *lpNumberOfBytesRead)
 {
-    return ((Resume_ReadProcessMemory_t)hook_ReadProcessMemory.resume)(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesRead);
+    return ((Resume_ReadProcessMemory_t)hook_ReadProcessMemory.Resume)(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesRead);
 }
 
 bool Worker::HandleWriteProcessMemory(LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T *lpNumberOfBytesWritten)
@@ -504,7 +504,7 @@ bool Worker::HandleWriteProcessMemory(LPVOID lpBaseAddress, LPCVOID lpBuffer, SI
     {
         Log.Error("Data exceeds text section");
 
-        return ((Resume_WriteProcessMemory_t)hook_WriteProcessMemory.resume)(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesWritten);
+        return ((Resume_WriteProcessMemory_t)hook_WriteProcessMemory.Resume)(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesWritten);
     }
 
     memcpy(&TextSectionBuffer[bufferOffset], lpBuffer, nSize);
@@ -522,7 +522,7 @@ bool Worker::HandleWriteProcessMemory(LPVOID lpBaseAddress, LPCVOID lpBuffer, SI
         *lpNumberOfBytesWritten = nSize;
     }
 
-    return ((Resume_WriteProcessMemory_t)hook_WriteProcessMemory.resume)(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesWritten);
+    return ((Resume_WriteProcessMemory_t)hook_WriteProcessMemory.Resume)(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesWritten);
 }
 
 void Worker::MarkAsNonNanomite(ZyanU64 Address)

@@ -45,7 +45,6 @@ private:
 	
 	void InitEntryPoints();
 	void InitDeadEnds();
-	void RestoreOEPData();
 	void PatchNanomitesJump();
 	void ReadTextSection();
 	void InitImports();
@@ -82,6 +81,7 @@ public:
 	
 	void InitProcessData(DWORD dwProcessId);
 	void InitMainThread(DWORD dwThreadId);
+	void RestoreOEPData();
 	void StartFixing();
 	
 	bool HandleReadProcessMemory(LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T *lpNumberOfBytesRead);
@@ -129,12 +129,12 @@ public:
 
 	Imports Imports;
 
-	HOOK_t hook_ReadProcessMemory;
-	HOOK_t hook_WriteProcessMemory;
-	HOOK_t hook_DebugActiveProcess;
-	HOOK_t hook_WaitForDebugEvent;
-	HOOK_t hook_ContinueDebugEvent;
-	HOOK_t hook_Nanomites;
+	Hook hook_ReadProcessMemory;
+	Hook hook_WriteProcessMemory;
+	Hook hook_DebugActiveProcess;
+	Hook hook_WaitForDebugEvent;
+	Hook hook_ContinueDebugEvent;
+	Hook hook_Nanomites;
 
 	bool IgnoreNextWrite;
 	DWORD NanomiteValid;

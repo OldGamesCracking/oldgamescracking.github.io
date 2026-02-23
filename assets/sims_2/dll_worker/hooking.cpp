@@ -2,15 +2,21 @@
 #include <Zydis.h>
 #include "hooking.h"
 
-BOOL hook_install_internal(FARPROC proc, LPVOID callback, HOOK_t *const in_out_hook)
+
+Hook::~Hook()
 {
-	if (proc == NULL || callback == NULL || in_out_hook == NULL)
+	Uninstall();
+}
+
+BOOL Hook::Install_Internal(FARPROC Proc, LPVOID Callback)
+{
+	if (Proc == NULL || Callback == NULL)
 	{
 		return FALSE;
 	}
 
-	in_out_hook->proc = proc;
-	in_out_hook->callback = callback;
+	this->Proc = Proc;
+	this->Callback = Callback;
 
 	/* Copy at least 5 bytes so we can install a JMP */
 	SIZE_T numBytes = 0;
@@ -19,140 +25,140 @@ BOOL hook_install_internal(FARPROC proc, LPVOID callback, HOOK_t *const in_out_h
 	{
 		ZydisDisassembledInstruction Instruction;
 
-		ZydisDisassembleIntel(ZYDIS_MACHINE_MODE_LEGACY_32, 0, (BYTE*)proc + numBytes, ZYDIS_MAX_INSTRUCTION_LENGTH, &Instruction);
+		ZydisDisassembleIntel(ZYDIS_MACHINE_MODE_LEGACY_32, 0, (BYTE*)Proc + numBytes, ZYDIS_MAX_INSTRUCTION_LENGTH, &Instruction);
 
 		numBytes += Instruction.info.length;
 	}
 
-	in_out_hook->opcodesBuffer = (LPBYTE)VirtualAlloc(0, numBytes + 5, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	OpcodesBuffer = (LPBYTE)VirtualAlloc(0, numBytes + 5, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
-	if (in_out_hook->opcodesBuffer == NULL)
+	if (OpcodesBuffer == NULL)
 	{
 		return FALSE;
 	}
 
 	/* Save original bytes */
-	memcpy(in_out_hook->opcodesBuffer, (BYTE*)proc, numBytes);
-	in_out_hook->opcodesLen = numBytes;
+	memcpy(OpcodesBuffer, (BYTE*)Proc, numBytes);
+	OpcodesLen = numBytes;
 
 	/* Create the jump pad */
-	BYTE *jumppad = in_out_hook->opcodesBuffer + numBytes;
+	BYTE *jumppad = OpcodesBuffer + numBytes;
 	*jumppad = 0xE9;
-	*(DWORD*)(jumppad + 1) = (BYTE*)proc - jumppad - 5 + numBytes;	// -5 to compensate the jump in the jumppad
+	*(DWORD *)(jumppad + 1) = (BYTE*)Proc - jumppad - 5 + numBytes;	// -5 to compensate the jump in the jumppad
 
 	/* Place a jmp to the callback */
 	DWORD oldProtect;
-	VirtualProtect(proc, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
-	*(BYTE*)proc = 0xE9;
-	*(DWORD*)((BYTE*)proc + 1) = (BYTE*)callback - (BYTE*)proc - 5;
-	VirtualProtect(proc, 5, oldProtect, &oldProtect);
+	VirtualProtect(Proc, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
+	*(BYTE*)Proc = 0xE9;
+	*(DWORD *)((BYTE *)Proc + 1) = (BYTE *)Callback - (BYTE *)Proc - 5;
+	VirtualProtect(Proc, 5, oldProtect, &oldProtect);
 
-	in_out_hook->enabled = TRUE;
+	Enabled = TRUE;
 
 	return TRUE;
 }
 
-BOOL hook_install(LPCSTR moduleName, LPCSTR procName, LPVOID callback, HOOK_t *const in_out_hook)
+BOOL Hook::Install(LPCSTR Module, LPCSTR Proc, LPVOID Callback)
 {
-	if (moduleName == NULL || procName == NULL || callback == NULL || in_out_hook == NULL)
+	if (Module == NULL || Proc == NULL || Callback == NULL)
 	{
 		return FALSE;
 	}
 
-	HMODULE hModule = GetModuleHandleA(moduleName);
+	HMODULE hModule = GetModuleHandleA(Module);
 
 	if (hModule == NULL)
 	{
 		return FALSE;
 	}
 
-	FARPROC proc = GetProcAddress(hModule, procName);
+	FARPROC proc = GetProcAddress(hModule, Proc);
 
 	if (proc == NULL)
 	{
 		return FALSE;
 	}
 
-	return hook_install_internal(proc, callback, in_out_hook);
+	return Install_Internal(proc, Callback);
 }
 
-BOOL hook_install_raw(FARPROC proc, LPVOID callback, HOOK_t *const in_out_hook)
+BOOL Hook::Install_Raw(FARPROC Proc, LPVOID Callback)
 {
-	if (proc == NULL || callback == NULL || in_out_hook == NULL)
+	if (Proc == NULL || Callback == NULL)
 	{
 		return FALSE;
 	}
 
-	return hook_install_internal(proc, callback, in_out_hook);
+	return Install_Internal(Proc, Callback);
 }
 
-BOOL hook_uninstall(HOOK_t *const hook)
+BOOL Hook::Uninstall()
 {
-	if (hook == NULL || hook->proc == NULL || hook->opcodesBuffer == NULL)
+	if (Proc == NULL || OpcodesBuffer == NULL)
 	{
 		return FALSE;
 	}
 
-	if (!hook->enabled)
+	if (!Enabled)
 	{
 		return TRUE;
 	}
 
 	DWORD oldProtect;
-	VirtualProtect(hook->proc, hook->opcodesLen, PAGE_EXECUTE_READWRITE, &oldProtect);
-	memcpy(hook->proc, hook->opcodesBuffer, hook->opcodesLen);
-	VirtualProtect(hook->proc, hook->opcodesLen, oldProtect, &oldProtect);
+	VirtualProtect(Proc, OpcodesLen, PAGE_EXECUTE_READWRITE, &oldProtect);
+	memcpy(Proc, OpcodesBuffer, OpcodesLen);
+	VirtualProtect(Proc, OpcodesLen, oldProtect, &oldProtect);
 
-	VirtualFree(hook->opcodesBuffer, 0, MEM_RELEASE);
+	VirtualFree(OpcodesBuffer, 0, MEM_RELEASE);
 
-	hook->opcodesBuffer = NULL;
-	hook->proc = NULL;
-	hook->enabled = FALSE;
+	OpcodesBuffer = NULL;
+	Proc = NULL;
+	Enabled = FALSE;
 
 	return TRUE;
 }
 
-BOOL hook_disable_fast(HOOK_t *const hook)
+BOOL Hook::Enable()
 {
-	if (hook == NULL || hook->proc == NULL || hook->opcodesBuffer == NULL)
+	if (Proc == NULL || Callback == NULL)
 	{
 		return FALSE;
 	}
 
-	if (!hook->enabled)
+	if (Enabled)
 	{
 		return TRUE;
 	}
 
 	DWORD oldProtect;
-	VirtualProtect(hook->proc, hook->opcodesLen, PAGE_EXECUTE_READWRITE, &oldProtect);
-	memcpy(hook->proc, hook->opcodesBuffer, hook->opcodesLen);
-	VirtualProtect(hook->proc, hook->opcodesLen, oldProtect, &oldProtect);
+	VirtualProtect(Proc, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
+	*(BYTE*)Proc = 0xE9;
+	*(DWORD *)((BYTE*)Proc + 1) = (BYTE*)Callback - (BYTE*)Proc - 5;
+	VirtualProtect(Proc, 5, oldProtect, &oldProtect);
 
-	hook->enabled = FALSE;
+	Enabled = TRUE;
 
 	return TRUE;
 }
 
-BOOL hook_enable_fast(HOOK_t *const hook)
+BOOL Hook::Pause()
 {
-	if (hook == NULL || hook->proc == NULL || hook->callback == NULL)
+	if (Proc == NULL || OpcodesBuffer == NULL)
 	{
 		return FALSE;
 	}
 
-	if (hook->enabled)
+	if (!Enabled)
 	{
 		return TRUE;
 	}
 
 	DWORD oldProtect;
-	VirtualProtect(hook->proc, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
-	*(BYTE*)hook->proc = 0xE9;
-	*(DWORD*)((BYTE*)hook->proc + 1) = (BYTE*)hook->callback - (BYTE*)hook->proc - 5;
-	VirtualProtect(hook->proc, 5, oldProtect, &oldProtect);
+	VirtualProtect(Proc, OpcodesLen, PAGE_EXECUTE_READWRITE, &oldProtect);
+	memcpy(Proc, OpcodesBuffer, OpcodesLen);
+	VirtualProtect(Proc, OpcodesLen, oldProtect, &oldProtect);
 
-	hook->enabled = TRUE;
+	Enabled = FALSE;
 
 	return TRUE;
 }

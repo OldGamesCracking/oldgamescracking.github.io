@@ -17,8 +17,8 @@ Worker worker;
 typedef BOOL(__stdcall *Resume_GetThreadContext_t)(HANDLE hThread, LPCONTEXT lpContext);
 typedef BOOL(__stdcall *Resume_SetThreadContext_t)(HANDLE hThread, LPCONTEXT lpContext);
 
-HOOK_t hook_GetThreadContext;
-HOOK_t hook_SetThreadContext;
+Hook hook_GetThreadContext;
+Hook hook_SetThreadContext;
 DWORD lastReadAddress = 0;
 
 __declspec(naked) void Callback_Nanomites()
@@ -31,7 +31,7 @@ __declspec(naked) void Callback_Nanomites()
         pushad;     // +4 * 8
 
         /* Install return to jump pad */
-        mov eax, worker.hook_Nanomites.resume;
+        mov eax, worker.hook_Nanomites.Resume;
         mov [esp + (4 + 4*8)], eax;
 
         /* Copy Nanomite data */
@@ -53,7 +53,7 @@ BOOL __stdcall Callback_GetThreadContext(HANDLE hThread, LPCONTEXT lpContext)
 {
     Log.Line("[GetThreadContext]");
 
-    BOOL result = ((Resume_GetThreadContext_t)hook_GetThreadContext.resume)(hThread, lpContext);
+    BOOL result = ((Resume_GetThreadContext_t)hook_GetThreadContext.Resume)(hThread, lpContext);
 
     memcpy(&worker.ctx, lpContext, sizeof(CONTEXT));
 
@@ -64,7 +64,7 @@ BOOL __stdcall Callback_SetThreadContext(HANDLE hThread, LPCONTEXT lpContext)
 {
     Log.Line("[SetThreadContext]");
 
-    BOOL result = ((Resume_SetThreadContext_t)hook_SetThreadContext.resume)(hThread, lpContext);
+    BOOL result = ((Resume_SetThreadContext_t)hook_SetThreadContext.Resume)(hThread, lpContext);
 
     if (worker.ctx.ContextFlags != lpContext->ContextFlags)
     {
@@ -200,11 +200,11 @@ BOOL __stdcall Callback_DebugActiveProcess(DWORD dwProcessId)
     Log.Line("\tentryPoint: %08X", worker.EntryPoint);
     Log.Line("\tOEP: %08X", worker.OEP);
 
-    hook_install("Kernel32.dll", "WaitForDebugEvent", &Callback_WaitForDebugEvent, &worker.hook_WaitForDebugEvent);
+    worker.hook_WaitForDebugEvent.Install("Kernel32.dll", "WaitForDebugEvent", &Callback_WaitForDebugEvent);
 
-    BOOL result = ((Resume_DebugActiveProcess_t)worker.hook_DebugActiveProcess.resume)(dwProcessId);
+    BOOL result = ((Resume_DebugActiveProcess_t)worker.hook_DebugActiveProcess.Resume)(dwProcessId);
 
-    hook_uninstall(&worker.hook_DebugActiveProcess);
+    worker.hook_DebugActiveProcess.Uninstall();
 
     return result;
 }
@@ -251,9 +251,9 @@ perform_step:
     {
         /* From here on, we will fake the result */
 
-        hook_disable_fast(&worker.hook_ReadProcessMemory);
-        hook_disable_fast(&hook_GetThreadContext);
-        hook_disable_fast(&hook_SetThreadContext);
+        worker.hook_ReadProcessMemory.Pause();
+        hook_GetThreadContext.Pause();
+        hook_SetThreadContext.Pause();
 
         if (worker.LastAction != ExplorationStepAction::None)
         {
@@ -289,6 +289,7 @@ perform_step:
 
                 MessageBox(NULL, L"Done. You can attach to the game now to dump it.", L"Done", MB_OK);
 
+                worker.SetEip(worker.OEP);
                 worker.DetachAndExit();
 
                 break;
@@ -307,9 +308,9 @@ perform_step:
                 lpDebugEvent->u.Exception.ExceptionRecord.ExceptionFlags = 0;
                 lpDebugEvent->u.Exception.ExceptionRecord.NumberParameters = 0;
 
-                hook_enable_fast(&worker.hook_ReadProcessMemory);
-                hook_enable_fast(&hook_GetThreadContext);
-                hook_enable_fast(&hook_SetThreadContext);
+                worker.hook_ReadProcessMemory.Enable();
+                hook_GetThreadContext.Enable();
+                hook_SetThreadContext.Enable();
 
                 worker.NanomiteValid = 0;
                 worker.IgnoreNextWrite = false;
@@ -331,7 +332,7 @@ perform_step:
 
     /** This part of the function is only reached as long as we have not been at the OEP */
 
-    result = ((Resume_WaitForDebugEvent_t)worker.hook_WaitForDebugEvent.resume)(lpDebugEvent, dwMilliseconds);
+    result = ((Resume_WaitForDebugEvent_t)worker.hook_WaitForDebugEvent.Resume)(lpDebugEvent, dwMilliseconds);
 
     DWORD dwDebugEventCode = lpDebugEvent->dwDebugEventCode;
 
@@ -354,15 +355,25 @@ perform_step:
             Log.Line("\tException at the OEP triggered");
 
             worker.InitMainThread(lpDebugEvent->dwThreadId);
+
+            int result = MessageBox(NULL, L"The game will be fixed now.\nIf you press cancel, the debugger will just detach and the game is left unchanged.", L"Starting", MB_OKCANCEL);
+
+            if (result == IDCANCEL)
+            {
+                worker.RestoreOEPData();
+                worker.SetEip(worker.OEP);
+                worker.DetachAndExit();
+            }
+
             worker.StartFixing();
 
-            hook_install("Kernel32.dll", "ContinueDebugEvent", &Callback_ContinueDebugEvent, &worker.hook_ContinueDebugEvent);
-            hook_install("Kernel32.dll", "ReadProcessMemory", &Callback_ReadProcessMemory, &worker.hook_ReadProcessMemory);
-            hook_install("Kernel32.dll", "WriteProcessMemory", &Callback_WriteProcessMemory, &worker.hook_WriteProcessMemory);
+            worker.hook_ContinueDebugEvent.Install("Kernel32.dll", "ContinueDebugEvent", &Callback_ContinueDebugEvent);
+            worker.hook_ReadProcessMemory.Install("Kernel32.dll", "ReadProcessMemory", &Callback_ReadProcessMemory);
+            worker.hook_WriteProcessMemory.Install("Kernel32.dll", "WriteProcessMemory", &Callback_WriteProcessMemory);
 
-            hook_install_raw((FARPROC)0x66724CB7, Callback_Nanomites, &worker.hook_Nanomites);
+            worker.hook_Nanomites.Install_Raw((FARPROC)0x66724CB7, Callback_Nanomites);
 
-            hook_disable_fast(&worker.hook_ReadProcessMemory);
+            worker.hook_ReadProcessMemory.Pause();
 
             goto perform_step;
         }
@@ -377,13 +388,13 @@ DWORD WINAPI WorkerThread(LPVOID data)
     
     Log.Line("Starting Worker");
 
-    hook_install("Kernel32.dll", "DebugActiveProcess", &Callback_DebugActiveProcess, &worker.hook_DebugActiveProcess);
+    worker.hook_DebugActiveProcess.Install("Kernel32.dll", "DebugActiveProcess", &Callback_DebugActiveProcess);
 
-    hook_install("Kernel32.dll", "GetThreadContext", &Callback_GetThreadContext, &hook_GetThreadContext);
-    hook_install("Kernel32.dll", "SetThreadContext", &Callback_SetThreadContext, &hook_SetThreadContext);
+    hook_GetThreadContext.Install("Kernel32.dll", "GetThreadContext", &Callback_GetThreadContext);
+    hook_SetThreadContext.Install("Kernel32.dll", "SetThreadContext", &Callback_SetThreadContext);
 
-    hook_disable_fast(&hook_GetThreadContext);
-    hook_disable_fast(&hook_SetThreadContext);
+    hook_GetThreadContext.Pause();
+    hook_SetThreadContext.Pause();
 
     Log.Line("Hooks installed");
 
@@ -405,13 +416,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 
         case (DLL_PROCESS_DETACH):
         {
-            Log.Line("Tearing hooks down");
-
-            hook_uninstall(&worker.hook_WaitForDebugEvent);
-            hook_uninstall(&worker.hook_ContinueDebugEvent);
-            hook_uninstall(&worker.hook_WriteProcessMemory);
-
-            Log.Line("Done");
+            Log.Line("Shutting down");
 
             break;
         }
