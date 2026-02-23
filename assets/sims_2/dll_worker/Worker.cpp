@@ -333,15 +333,18 @@ void Worker::InitImports()
         return;
     }
 
-    Log.Line("Loaded %u Imports", IATEntries);
+    Log.Debug("Loaded %u Imports", IATEntries);
 
     for (size_t i = 0; i < IATEntries; i++)
     {
-        Log.Log("Thuk %u : %08X -> ", i, IAT[i]);
+        if (Log.Verbose)
+        {
+            Log.Log("Thuk %u : %08X -> ", i, IAT[i]);
+        }
         
         if (IAT[i] == 0)
         {
-            Log.Line("Empty");
+            Log.Debug("Empty");
 
             continue;
         }
@@ -351,7 +354,7 @@ void Worker::InitImports()
 
         if (mod == nullptr)
         {
-            Log.Line("SafeDisc (?)");
+            Log.Debug("SafeDisc (?)");
 
             IAT[i] = 0;
         }
@@ -688,8 +691,8 @@ void Worker::ProbeVMInstructions()
         NanomiteData.di.iv.IV2
     };
 
-    Log.Line("IV1: %08X", NanomiteData.di.iv.IV1);
-    Log.Line("IV2: %08X", NanomiteData.di.iv.IV2);
+    Log.Debug("IV1: %08X", NanomiteData.di.iv.IV1);
+    Log.Debug("IV2: %08X", NanomiteData.di.iv.IV2);
 
     ZyanU8 instruction_buffer[ZYDIS_MAX_INSTRUCTION_LENGTH];
     ZyanUSize instruction_length = ZYDIS_MAX_INSTRUCTION_LENGTH;
@@ -759,7 +762,7 @@ size_t Worker::RecoverVMInstructions_Inner(DWORD address)
 
     DWORD vmLookup = sd.GetVMLookup(returnAddress, ImageBase);
 
-    Log.Line("VM Lookup: %08X", vmLookup);
+    Log.Debug("VM Lookup: %08X", vmLookup);
 
     PCodeDescriptor PCode;
 
@@ -772,22 +775,22 @@ size_t Worker::RecoverVMInstructions_Inner(DWORD address)
         return 0;
     }
 
-    Log.Line("CodeType: %u", PCode.code_type);
+    Log.Debug("CodeType: %u", PCode.code_type);
 
-    Log.Log("Opcode: ");
+    Log.Debug("Opcode: ");
 
     for (auto b = 0; b < 16; b++)
     {
-        Log.Log("%02X%s", PCode.opcode[b], ((b + 1) == 16) ? "\n" : " ");
+        Log.Debug("%02X%s", PCode.opcode[b], ((b + 1) == 16) ? "\n" : " ");
     }
 
-    Log.Log("Parsed: ");
+    Log.Debug("Parsed: ");
 
     DWORD *parsed = (DWORD *)&PCode.opcode[0];
 
     for (auto d = 0; d < 4; d++)
     {
-        Log.Log("%08X%s", parsed[d], ((d + 1) == 4) ? "\n" : " ");
+        Log.Debug("%08X%s", parsed[d], ((d + 1) == 4) ? "\n" : " ");
     }
 
     VM_IV iv
@@ -901,7 +904,7 @@ size_t Worker::RecoverVMInstructions(ZyanU64 address)
 
     if (d.GetEip() == address)
     {
-        Log.Line("This is probably an encrypted function, not an emulated instruction");
+        Log.Debug("This is probably an encrypted function, not an emulated instruction");
     }
 
     /* Restore */
@@ -916,7 +919,7 @@ size_t Worker::RecoverVMInstructions(ZyanU64 address)
     {
         d.SetEip((DWORD)address);
 
-        Log.Line("Nothing changed. Trying to interpret this as a VM entry");
+        Log.Debug("Nothing changed. Trying to interpret this as a VM entry");
 
         return RecoverVMInstructions_Inner((DWORD)address);
     }
@@ -1080,7 +1083,10 @@ void Worker::PerformExplorationStep()
                         }
                         else
                         {
-                            PrintProcName(mod, mod->GetProcAt(indirectedAddress), true);
+                            if (Log.Verbose)
+                            {
+                                PrintProcName(mod, mod->GetProcAt(indirectedAddress), true);
+                            }
 
                             if (DeadEnds.find(indirectedAddress) == DeadEnds.end())
                             {
@@ -1114,7 +1120,7 @@ void Worker::PerformExplorationStep()
                     {
                         if (Explorer->IsInTextSection(indirectedAddress))
                         {
-                            Log.Log("IsInTextSection");
+                            Log.Debug("IsInTextSection");
                             // TODO: Check if stub
                             Explorer->AddEntryPoint(indirectedAddress, true);
                         }
@@ -1125,7 +1131,10 @@ void Worker::PerformExplorationStep()
 
                             if ((mod != nullptr) && !mod->Excluded)
                             {
-                                PrintProcName(mod, mod->GetProcAt(indirectedAddress), true);
+                                if (Log.Verbose)
+                                {
+                                    PrintProcName(mod, mod->GetProcAt(indirectedAddress), true);
+                                }
 
                                 if (DeadEnds.find(indirectedAddress) == DeadEnds.end())
                                 {
@@ -1152,7 +1161,7 @@ void Worker::PerformExplorationStep()
                                 /* Check if this is a stub */
                                 if (SafeDiscHelper(hProcess).IsRemoteProcStub(indirectedAddress))
                                 {
-                                    Log.Debug("STUB");
+                                    Log.Line("Got a Stub @ %08X", resultData.ResultAddress);
 
                                     DWORD ProcAddress;
                                     bool IsJump;
@@ -1199,8 +1208,8 @@ void Worker::PerformExplorationStep()
             {
                 /* This should be a Nanomite */
 
-                Log.Line("Handling UnusualCode");
-                Log.Line("Nanomite (unusual): %08X", (uint32_t)resultData.ResultAddress);
+                Log.Debug("Handling UnusualCode");
+                Log.Debug("Nanomite (unusual): %08X", (uint32_t)resultData.ResultAddress);
 
                 EventAddress = resultData.ResultAddress;
 
@@ -1250,7 +1259,7 @@ void Worker::PerformExplorationStep()
 
                 if (SafeDiscHelper(hProcess).IsJumpPadSetup(resultData.TargetAddress))
                 {
-                    Log.Debug("JumpPadSetup");
+                    Log.Line("Got a JumpPadSetup @ %08X", resultData.ResultAddress);
 
                     DWORD ProcAddress;
                     bool IsJump;
@@ -1287,14 +1296,17 @@ void Worker::PerformExplorationStep()
 
                     if ((mod != nullptr) && !mod->Excluded)
                     {
-                        PrintProcName(mod, mod->GetProcAt(indirectedAddress), true);
+                        if (Log.Verbose)
+                        {
+                            PrintProcName(mod, mod->GetProcAt(indirectedAddress), true);
+                        }
                     }
                     else
                     {
                         /* Check if this is a stub */
                         if (SafeDiscHelper(hProcess).IsRemoteProcStub(indirectedAddress))
                         {
-                            Log.Line("\t\t-> STUB");
+                            Log.Line("Call to RemoteProcStub @ %08X", indirectedAddress);
 
                             DWORD ProcAddress;
                             bool IsJump;

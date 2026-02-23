@@ -328,14 +328,14 @@ void SafeDiscHelper::VM_Devirtualize(VM_IV *iv, ZyanU8 *out_instruction, ZyanUSi
 	BYTE OperandA = (IV2 >> 8) & 0xff;
 	BYTE OperandB = (IV2 >> 0) & 0xff;
 
-	Log.Line("Opcode: %02X", Opcode);
-	Log.Line("OperandA: %02X", OperandA);
-	Log.Line("OperandB: %02X", OperandB);
+	Log.Debug("Opcode: %02X", Opcode);
+	Log.Debug("OperandA: %02X", OperandA);
+	Log.Debug("OperandB: %02X", OperandB);
 
 	DWORD Key_IV1 = VM_Transform_Key(Key_IV2);
 	DWORD IV1 = iv->IV1 ^ Key_IV1;
 
-	Log.Line("IV1: %08X", IV1);
+	Log.Debug("IV1: %08X", IV1);
 
 	if (Opcode == 0x0000)
 	{
@@ -549,7 +549,7 @@ void SafeDiscHelper::VM_Devirtualize(VM_IV *iv, ZyanU8 *out_instruction, ZyanUSi
 
 	ZyanStatus status = ZydisEncoderEncodeInstruction(&req, out_instruction, out_len);
 
-	Log.Line("Encoder status: %08X", status);
+	Log.Debug("Encoder status: %08X", status);
 
 	if (ZYAN_FAILED(status))
 	{

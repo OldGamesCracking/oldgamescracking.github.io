@@ -981,7 +981,7 @@ CodeExplorer::ExplorerResult CodeExplorer::Explore(ResultData *const ResultData)
 
                 if (IsMemoryAddressFromIAT(inst, target))
                 {
-                    Log.Line("Found instruction at %08X that points to %08X", (DWORD)va, (DWORD)target);
+                    Log.Debug("Found instruction at %08X that points to %08X", (DWORD)va, (DWORD)target);
 
                     ResultData->ResultAddress = va;
                     ResultData->TargetAddress = target;

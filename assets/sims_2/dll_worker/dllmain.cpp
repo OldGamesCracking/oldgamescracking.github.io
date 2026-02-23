@@ -51,7 +51,7 @@ __declspec(naked) void Callback_Nanomites()
 
 BOOL __stdcall Callback_GetThreadContext(HANDLE hThread, LPCONTEXT lpContext)
 {
-    Log.Line("[GetThreadContext]");
+    Log.Debug("[GetThreadContext]");
 
     BOOL result = ((Resume_GetThreadContext_t)hook_GetThreadContext.Resume)(hThread, lpContext);
 
@@ -62,123 +62,123 @@ BOOL __stdcall Callback_GetThreadContext(HANDLE hThread, LPCONTEXT lpContext)
 
 BOOL __stdcall Callback_SetThreadContext(HANDLE hThread, LPCONTEXT lpContext)
 {
-    Log.Line("[SetThreadContext]");
+    Log.Debug("[SetThreadContext]");
 
     BOOL result = ((Resume_SetThreadContext_t)hook_SetThreadContext.Resume)(hThread, lpContext);
 
     if (worker.ctx.ContextFlags != lpContext->ContextFlags)
     {
-        Log.Line("ContextFlags : %08X -> %08X", worker.ctx.ContextFlags, lpContext->ContextFlags);
+        Log.Debug("ContextFlags : %08X -> %08X", worker.ctx.ContextFlags, lpContext->ContextFlags);
     }
 
     if (worker.ctx.Dr0 != lpContext->Dr0)
     {
-        Log.Line("Dr0 : %08X -> %08X", worker.ctx.Dr0, lpContext->Dr0);
+        Log.Debug("Dr0 : %08X -> %08X", worker.ctx.Dr0, lpContext->Dr0);
     }
 
     if (worker.ctx.Dr1 != lpContext->Dr1)
     {
-        Log.Line("Dr1 : %08X -> %08X", worker.ctx.Dr1, lpContext->Dr1);
+        Log.Debug("Dr1 : %08X -> %08X", worker.ctx.Dr1, lpContext->Dr1);
     }
 
     if (worker.ctx.Dr2 != lpContext->Dr2)
     {
-        Log.Line("Dr2 : %08X -> %08X", worker.ctx.Dr2, lpContext->Dr2);
+        Log.Debug("Dr2 : %08X -> %08X", worker.ctx.Dr2, lpContext->Dr2);
     }
 
     if (worker.ctx.Dr3 != lpContext->Dr3)
     {
-        Log.Line("Dr3 : %08X -> %08X", worker.ctx.Dr3, lpContext->Dr3);
+        Log.Debug("Dr3 : %08X -> %08X", worker.ctx.Dr3, lpContext->Dr3);
     }
 
     if (worker.ctx.Dr6 != lpContext->Dr6)
     {
-        Log.Line("Dr6 : %08X -> %08X", worker.ctx.Dr6, lpContext->Dr6);
+        Log.Debug("Dr6 : %08X -> %08X", worker.ctx.Dr6, lpContext->Dr6);
     }
 
     if (worker.ctx.Dr7 != lpContext->Dr7)
     {
-        Log.Line("Dr7 : %08X -> %08X", worker.ctx.Dr7, lpContext->Dr7);
+        Log.Debug("Dr7 : %08X -> %08X", worker.ctx.Dr7, lpContext->Dr7);
     }
 
     if (worker.ctx.SegGs != lpContext->SegGs)
     {
-        Log.Line("SegGs : %08X -> %08X", worker.ctx.SegGs, lpContext->SegGs);
+        Log.Debug("SegGs : %08X -> %08X", worker.ctx.SegGs, lpContext->SegGs);
     }
 
     if (worker.ctx.SegFs != lpContext->SegFs)
     {
-        Log.Line("SegFs : %08X -> %08X", worker.ctx.SegFs, lpContext->SegFs);
+        Log.Debug("SegFs : %08X -> %08X", worker.ctx.SegFs, lpContext->SegFs);
     }
 
     if (worker.ctx.SegEs != lpContext->SegEs)
     {
-        Log.Line("SegEs : %08X -> %08X", worker.ctx.SegEs, lpContext->SegEs);
+        Log.Debug("SegEs : %08X -> %08X", worker.ctx.SegEs, lpContext->SegEs);
     }
 
     if (worker.ctx.SegDs != lpContext->SegDs)
     {
-        Log.Line("SegDs : %08X -> %08X", worker.ctx.SegDs, lpContext->SegDs);
+        Log.Debug("SegDs : %08X -> %08X", worker.ctx.SegDs, lpContext->SegDs);
     }
 
     if (worker.ctx.Edi != lpContext->Edi)
     {
-        Log.Line("Edi : %08X -> %08X", worker.ctx.Edi, lpContext->Edi);
+        Log.Debug("Edi : %08X -> %08X", worker.ctx.Edi, lpContext->Edi);
     }
 
     if (worker.ctx.Esi != lpContext->Esi)
     {
-        Log.Line("Esi : %08X -> %08X", worker.ctx.Esi, lpContext->Esi);
+        Log.Debug("Esi : %08X -> %08X", worker.ctx.Esi, lpContext->Esi);
     }
 
     if (worker.ctx.Ebx != lpContext->Ebx)
     {
-        Log.Line("Ebx : %08X -> %08X", worker.ctx.Ebx, lpContext->Ebx);
+        Log.Debug("Ebx : %08X -> %08X", worker.ctx.Ebx, lpContext->Ebx);
     }
 
     if (worker.ctx.Edx != lpContext->Edx)
     {
-        Log.Line("Edx : %08X -> %08X", worker.ctx.Edx, lpContext->Edx);
+        Log.Debug("Edx : %08X -> %08X", worker.ctx.Edx, lpContext->Edx);
     }
 
     if (worker.ctx.Ecx != lpContext->Ecx)
     {
-        Log.Line("Ecx : %08X -> %08X", worker.ctx.Ecx, lpContext->Ecx);
+        Log.Debug("Ecx : %08X -> %08X", worker.ctx.Ecx, lpContext->Ecx);
     }
 
     if (worker.ctx.Eax != lpContext->Eax)
     {
-        Log.Line("Eax : %08X -> %08X", worker.ctx.Eax, lpContext->Eax);
+        Log.Debug("Eax : %08X -> %08X", worker.ctx.Eax, lpContext->Eax);
     }
 
     if (worker.ctx.Ebp != lpContext->Ebp)
     {
-        Log.Line("Ebp : %08X -> %08X", worker.ctx.Ebp, lpContext->Ebp);
+        Log.Debug("Ebp : %08X -> %08X", worker.ctx.Ebp, lpContext->Ebp);
     }
 
     if (worker.ctx.Eip != lpContext->Eip)
     {
-        Log.Line("Eip : %08X -> %08X", worker.ctx.Eip, lpContext->Eip);
+        Log.Debug("Eip : %08X -> %08X", worker.ctx.Eip, lpContext->Eip);
     }
 
     if (worker.ctx.SegCs != lpContext->SegCs)
     {
-        Log.Line("SegCs : %08X -> %08X", worker.ctx.SegCs, lpContext->SegCs);
+        Log.Debug("SegCs : %08X -> %08X", worker.ctx.SegCs, lpContext->SegCs);
     }
 
     if (worker.ctx.EFlags != lpContext->EFlags)
     {
-        Log.Line("EFlags : %08X -> %08X", worker.ctx.EFlags, lpContext->EFlags);
+        Log.Debug("EFlags : %08X -> %08X", worker.ctx.EFlags, lpContext->EFlags);
     }
 
     if (worker.ctx.Esp != lpContext->Esp)
     {
-        Log.Line("Esp : %08X -> %08X", worker.ctx.Esp, lpContext->Esp);
+        Log.Debug("Esp : %08X -> %08X", worker.ctx.Esp, lpContext->Esp);
     }
 
     if (worker.ctx.SegSs != lpContext->SegSs)
     {
-        Log.Line("SegSs : %08X -> %08X", worker.ctx.SegSs, lpContext->SegSs);
+        Log.Debug("SegSs : %08X -> %08X", worker.ctx.SegSs, lpContext->SegSs);
     }
 
     return result;
@@ -365,6 +365,10 @@ perform_step:
                 worker.DetachAndExit();
             }
 
+            result = MessageBox(NULL, L"Do you want to turn on verbose logging?", L"Logging", MB_YESNO);
+
+            Log.Verbose = (result == IDYES);
+
             worker.StartFixing();
 
             worker.hook_ContinueDebugEvent.Install("Kernel32.dll", "ContinueDebugEvent", &Callback_ContinueDebugEvent);
@@ -384,8 +388,6 @@ perform_step:
 
 DWORD WINAPI WorkerThread(LPVOID data)
 {
-    Log.Verbose = true;
-    
     Log.Line("Starting Worker");
 
     worker.hook_DebugActiveProcess.Install("Kernel32.dll", "DebugActiveProcess", &Callback_DebugActiveProcess);
