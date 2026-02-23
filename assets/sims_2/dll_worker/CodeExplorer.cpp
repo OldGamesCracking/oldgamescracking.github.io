@@ -309,7 +309,7 @@ bool CodeExplorer::NextVAToExplore(CodeExplorer::ExplorerResult *const result, R
 
                     if (!Disassemble(va_test, &_Code[bufferOffset], remaining, &ResultData->Instruction))
                     {
-                        Log.Line("Error: Unable to disassemble @ %08X", (uint32_t)va_test);
+                        Log.Error("Unable to disassemble @ %08X", (uint32_t)va_test);
 
                         ResultData->ResultAddress = va_test;
 

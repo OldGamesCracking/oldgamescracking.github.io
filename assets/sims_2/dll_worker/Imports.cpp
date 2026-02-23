@@ -134,7 +134,7 @@ void Imports::AddCall(DWORD CallAt, DWORD Destination, bool ByRegister, bool IsJ
 	}
 	else
 	{
-		Log.Line("Destination address already in IAT");
+		Log.Debug("Destination address already in IAT");
 	}
 
 	Calls.push_back(IntermodularCall(CallAt, Destination, ByRegister, IsJump));

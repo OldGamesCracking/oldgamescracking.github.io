@@ -211,8 +211,8 @@ BOOL __stdcall Callback_DebugActiveProcess(DWORD dwProcessId)
 
 BOOL __stdcall Callback_ReadProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T *lpNumberOfBytesRead)
 {
-    Log.Line("[Callback_ReadProcessMemory]");
-    Log.Line("\t%d bytes @ %08X", nSize, lpBaseAddress);
+    Log.Debug("[Callback_ReadProcessMemory]");
+    Log.Debug("\t%d bytes @ %08X", nSize, lpBaseAddress);
 
     if (lastReadAddress == (DWORD)lpBaseAddress)
     {
