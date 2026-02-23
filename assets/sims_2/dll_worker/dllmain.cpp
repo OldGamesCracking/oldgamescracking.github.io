@@ -1,7 +1,7 @@
 #include <Windows.h>
 #include <stdio.h>
 #include "logging.h"
-#include "hooking.h"
+#include "Hooking.h"
 #include "Worker.h"
 
 

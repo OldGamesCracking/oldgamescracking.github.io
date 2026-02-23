@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <Zydis.h>
-#include "hooking.h"
+#include "Hooking.h"
 
 
 Hook::~Hook()

@@ -6,7 +6,7 @@
 #include "Modules.h"
 #include "Imports.h"
 #include "CodeExplorer.h"
-#include "hooking.h"
+#include "Hooking.h"
 #include "SafeDiscHelper.h"
 
 
