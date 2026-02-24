@@ -32,3 +32,4 @@ layout: default
 - [The Sims 2 - Part I (SafeDisc v3.20, Findig the OEP)](/games/sims_2_part_1)
 - [The Sims 2 - Part II (Imports)](/games/sims_2_part_2)
 - [The Sims 2 - Part III (Nanomites)](/games/sims_2_part_3)
+- [The Sims 2 - Part IV (Tooling, Encrypted Functions)](/games/sims_2_part_4)

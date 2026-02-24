@@ -278,4 +278,4 @@ Simply also jump that instruction:
 *(WORD*)0x6672CFFD = (WORD)0x01EB;
 ```
 
-***
+* * *
