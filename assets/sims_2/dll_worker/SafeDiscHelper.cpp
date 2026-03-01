@@ -129,36 +129,26 @@ DWORD SafeDiscHelper::DecryptVMLookupFromPCode(DWORD Lookup)
 
 DWORD SafeDiscHelper::GetVMLookupFromPCode(const PCodeDescriptor *const Descriptor)
 {
-	// logger.LogLine("Value: %08X", Descriptor->value.value.value);
-	// logger.LogLine("Decrypted: %08X", DecryptVMLookupFromPCode(Descriptor->value.value.value));
-
-	return DecryptVMLookupFromPCode(Descriptor->value.value.value);
+	return DecryptVMLookupFromPCode(Descriptor->lookup.value.value);
 }
 
 bool SafeDiscHelper::GetPCodeDescriptor(DWORD Lookup, PCodeDescriptor *const PCode)
 {
 	const PCodeDescriptorsContainer *PCODE_DESCRIPTORS;
 
-	if (!process->ReadMemory((LPVOID)PCODE_DESCRIPTORS_LOCATION, (PBYTE)&PCODE_DESCRIPTORS, sizeof(PCodeDescriptorsContainer *)))
+	if (!process->ReadMemory((LPVOID)PCODE_DESCRIPTORS_LOCATION, (PBYTE)&PCODE_DESCRIPTORS, sizeof(PCodeDescriptorsContainer*)))
 	{
 		Log.Error("Could not read descriptors");
 
 		return false;
 	}
 	
-	// logger.LogLine("PCODE_DESCRIPTORS_LOCATION: %08X", (DWORD)PCODE_DESCRIPTORS_LOCATION);
-	// logger.LogLine("*PCODE_DESCRIPTORS_LOCATION: %08X", (DWORD)PCODE_DESCRIPTORS);
-
 	for (auto i = 0; i < PCODE_DESCRIPTORS_LEN; i++)
 	{
 		auto idx = (i + Lookup) % PCODE_DESCRIPTORS_LEN;
 
-		// logger.LogLine("IDX: %u", idx);
-
 		const PCodeDescriptor *PCodeAddress = &PCODE_DESCRIPTORS->codes[idx];
 
-		// logger.LogLine("PCode: %08X", (DWORD)PCodeAddress);
-		
 		if (!process->ReadMemory((LPVOID)PCodeAddress, (PBYTE)PCode, sizeof(PCodeDescriptor)))
 		{
 			Log.Error("Could not read PCode");
@@ -177,12 +167,8 @@ bool SafeDiscHelper::GetPCodeDescriptor(DWORD Lookup, PCodeDescriptor *const PCo
 			return false;
 		}
 		
-		// logger.LogLine("Valid: %u", (DWORD)Valid);
-
 		if ((Valid != 0) && (GetVMLookupFromPCode(PCode) == Lookup))
 		{
-			// logger.LogLine("PCode found ;)");
-
 			return true;
 		}
 	}

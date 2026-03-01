@@ -775,18 +775,18 @@ size_t Worker::RecoverVMInstructions_Inner(DWORD address)
         return 0;
     }
 
-    Log.Debug("CodeType: %u", PCode.code_type);
+    Log.Debug("Subsequent Instructions: %u", PCode.subsequent_instructions);
 
     Log.Debug("Opcode: ");
 
     for (auto b = 0; b < 16; b++)
     {
-        Log.Debug("%02X%s", PCode.opcode[b], ((b + 1) == 16) ? "\n" : " ");
+        Log.Debug("%02X%s", PCode.opcode.buffer[b], ((b + 1) == 16) ? "\n" : " ");
     }
 
     Log.Debug("Parsed: ");
 
-    DWORD *parsed = (DWORD *)&PCode.opcode[0];
+    DWORD *parsed = (DWORD *)&PCode.opcode.buffer[0];
 
     for (auto d = 0; d < 4; d++)
     {

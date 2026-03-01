@@ -13,22 +13,6 @@
 #define NANOMITE_STATUS_VM          (0x20)
 
 
-struct Transformer {
-    BYTE field0_0x0;
-    BYTE field1_0x1;
-    BYTE field2_0x2;
-    BYTE field3_0x3;
-    BYTE field4_0x4;
-    BYTE field5_0x5;
-    BYTE field6_0x6;
-    BYTE field7_0x7;
-    BYTE field8_0x8;
-    BYTE field9_0x9;
-    BYTE field10_0xa;
-    BYTE field11_0xb;
-    DWORD(*transform)(struct Transformer *, DWORD);
-};
-
 struct SimpleValue_VT {
     DWORD(*get)(struct SimpleValue *, DWORD, DWORD, DWORD);
     void (*set)(struct SimpleValue *, DWORD);
@@ -40,18 +24,25 @@ struct SimpleValue {
 };
 
 struct ValueContainer {
-    struct ValueContainer *base;
-    void *some_ptr;
+    void *vtable;
+    void *some_ptr_0;
     struct SimpleValue value;
-    struct OperationHelper *op_helper;
-    struct Transformer *transformer;
+    void *some_ptr_1;
+    void *some_ptr_2;
 };
 
-struct OperationHelper {
-    void (*init)(struct OperationHelper *, struct ValueContainer *, DWORD *);
-    struct ValueContainer a;
-    struct ValueContainer b;
+#pragma pack(push,1)
+struct OPCODE_t {
+    SIZE_T len;
+    BYTE field1_0x4;
+    BYTE field2_0x5;
+    BYTE field3_0x6;
+    BYTE field4_0x7;
+    BYTE field5_0x8;
+    BYTE field6_0x9;
+    BYTE buffer[16];
 };
+#pragma pack(pop)
 
 struct PCodeDescriptor {
     DWORD some_val;
@@ -76,7 +67,7 @@ struct PCodeDescriptor {
     BYTE field19_0x19;
     BYTE field20_0x1a;
     BYTE field21_0x1b;
-    struct ValueContainer value;
+    struct ValueContainer lookup;
     BYTE field23_0x34;
     BYTE field24_0x35;
     BYTE field25_0x36;
@@ -221,14 +212,7 @@ struct PCodeDescriptor {
     BYTE field164_0xc1;
     BYTE field165_0xc2;
     BYTE field166_0xc3;
-    DWORD len_enc; /* Created by retype action */
-    BYTE field168_0xc8;
-    BYTE field169_0xc9;
-    BYTE field170_0xca;
-    BYTE field171_0xcb;
-    BYTE field172_0xcc;
-    BYTE field173_0xcd;
-    BYTE opcode[16];
+    struct OPCODE_t opcode;
     BYTE field175_0xde;
     BYTE field176_0xdf;
     BYTE field177_0xe0;
@@ -255,7 +239,7 @@ struct PCodeDescriptor {
     BYTE field198_0xf5;
     BYTE field199_0xf6;
     BYTE field200_0xf7;
-    DWORD code_type; /* len / type ? */
+    DWORD subsequent_instructions;
 };
 
 #pragma pack(push,1)
