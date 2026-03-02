@@ -33,3 +33,4 @@ layout: default
 - [The Sims 2 - Part II (Imports)](/games/sims_2_part_2)
 - [The Sims 2 - Part III (Nanomites)](/games/sims_2_part_3)
 - [The Sims 2 - Part IV (Tooling, Encrypted Functions)](/games/sims_2_part_4)
+- [The Sims 2 - Part V (VM)](/games/sims_2_part_5)
