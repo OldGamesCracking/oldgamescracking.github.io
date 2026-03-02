@@ -1,0 +1,27 @@
+; Note: VM must have run at least once
+$ParserPCodes = 0x6682A660
+$PCodesLen = 0x2000 ; Code only: 0x1100
+$PCodeSize = 0x18
+$OffsetValue = 8 + 4
+$key = 0x3635262F
+
+$buffer_size = $PCodesLen * 4
+alloc $buffer_size
+$buffer = $lastalloc
+$buffer_ptr = $buffer
+$i = 0
+
+$ParserPCodes += $OffsetValue
+
+loop:
+	dword:[$buffer_ptr] = dword:[$ParserPCodes] ^ $key
+	$buffer_ptr += 4
+	$ParserPCodes += $PCodeSize
+	i += 1
+	cmp $i, $PCodesLen
+	jb loop
+
+end:
+
+savedata "parser_p_codes.bin", $buffer, $buffer_size
+free $buffer
