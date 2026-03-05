@@ -467,13 +467,13 @@ uint32_t key_IV1 = Transform(key_IV2); // 0x9CA0618B
 IV1 ^= key_IV1; // 0x00F0406F
 ```
 
-So, we have an Opcode of 0 (MOV), operandA is 0 (EAX), operandB is 8 (IMM) and the IMM register has a value of 0x00F0406F. Which means that the instruction boils down to:
+So, we have an Opcode of 0 (`MOV`), operandA is 0 (EAX), operandB is 8 (IMM) and the IMM register has a value of 0x00F0406F. Which means that the instruction boils down to:
 
 ```asm
 MOV EAX, 0x00F0406F
 ```
 
-Let's do that one more time. For the second call at 0x00C7E633 (see image above) we get the following IVs: 0x00000000, 0x634968BF, 0x71C160C9. That results in an opcode of 2 (CALL), an operandA of 10 (EIP), an operandB of 8 (IMM) and IMM has a value of 0xFFE90934. So we get:
+Let's do that one more time. For the second call at 0x00C7E633 (see image above) we get the following IVs: 0x00000000, 0x634968BF, 0x71C160C9. That results is an opcode of 2 (`CALL`), an operandA of 10 (EIP), an operandB of 8 (IMM) and IMM has a value of 0xFFE90934. So we get:
 
 ```asm
 CALL +0xFFE90934
