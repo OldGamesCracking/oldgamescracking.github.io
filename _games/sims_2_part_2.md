@@ -112,7 +112,7 @@ Afterwards the registers are being restored. But have a closer look. See that th
 ![]({{site.url}}/assets/sims_2/intermodular_call_by_stub.png)
 
 Interestingly this is not how it works. Or at least the second part after the inner stub is located somewhere different then where you think it is.<br>
-Go ahead and see for yourself. Put a breakpoint (HW or SW) on any instruction after the Call to the inner stub at 0x6678E3BA. It will never trigger as this code is never executed. I don't really know why, I guess the code is either there to fool us or used for other scenarios as we might see later.<br>
+Go ahead and see for yourself. Put a breakpoint (HW or SW) on any instruction after the Call to the inner stub at 0x6678E3BA. It will never trigger as this code is never executed. I don't really know why, I guess the code is either there to fool us or used for other scenarios as we might see later. Or it was just put there automaticly by the compiler.<br>
 But how can we deal with that? How can we find the true location where the context is restored and the `RET` is performed (without reversing the inner stub since we're lazy, of course)?<br>
 Well, think about it for a moment. The SafeDisc stuff needs to be as transparent as possible. It can not change register values or values on the stack or even push stuff on the stack without resetting everything back to it's original state afterwards. So at some point - for instance - ESP must be reset to the same value as when we entered the stub. We can 'monitor' the exact moment when that happens by a cleverly placed hardware breakpoint.<br>
 The method is as follows:

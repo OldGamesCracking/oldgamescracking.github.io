@@ -257,7 +257,8 @@ Ok, so a simple searchpattern won't help us and parsing the instructions to find
 
 While working on my tool and looking through the logs, I realized that even with the patch from above after some while, the Nanomites stopped beeing restored. It took me some time to figure out the cause, but enventually I figured out that actually two more patches are needed.<br>
 
-First, there is a counter that will increase for every `INT3` that turns out to be something else but not a Nanomite. We need to make sure to prevent this counter from increasing. This is a bit in contrast to what I said previously, because if we can reset the counter, why bother whith finding only 'good' Nanomites in the first place? Well, the answer is simple: I tried to avoid finding 'bad' Nanomites, but that turned out to be somewhat complicated so in the end I opted to go with a 'best effort' approach and for everything else, I fall back tho this patch.
+First, there is a counter that will increase for every `INT3` that turns out to be something else but not a Nanomite. We need to make sure to prevent this counter from increasing. This is a bit in contrast to what I said previously, because if we can reset the counter, why bother whith finding only 'good' Nanomites in the first place? Well, the answer is simple: I tried to avoid finding 'bad' Nanomites, but that turned out to be somewhat complicated so in the end I opted to go with a 'best effort' approach and for everything else, I fall back to this patch.<br>
+
 The patch is simple, just skip this call. Inside the call, the counter is incremented:
 
 ![]({{site.url}}/assets/sims_2/nanomites_jump2.png)
