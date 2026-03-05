@@ -94,7 +94,7 @@ A second common method is to embed the application into the loader, decrypt it i
 
 The technique is the same as in a malware [dropper](https://en.wikipedia.org/wiki/Dropper_(malware)).<br>
 
-The third common method is to add the loader to the original application file, encrypt or somehow mess up the original app code and alter the .exe so that upon startup it will instead call the loader code. The loader will then un-messes the original content and when it's done, jump to the formerly mentioned OEP.
+The third common method is to add the loader to the original application file, encrypt or somehow mess up the original app code and alter the .exe so that upon startup it will instead call the loader code. The loader will then un-mess the original content and when it's done, jump to the formerly mentioned OEP.
 
 ![]({{site.url}}/assets/sims_2/method_3_a.png)
 
@@ -137,12 +137,12 @@ So for now we can conclude that this game uses a 'Type 3' loader as we discussed
 
 Finding the OEP is really a classic task in reverse engineering that is not unique to game cracking. You can find many articles online. If you want to get a start into the topic, have a look at this [UnpackMe Collection](https://forum.tuts4you.com/files/file/1314-tuts-4-you-unpackme-collection-2016/), it's a good place to start and train your skills on all difficulty levels.<br>
 
-In general, you can approach (find) the OEP from two sides. Either by finding the code that is executed at a very late stage of the loader or by finding the code that is executed very early in the application. Both have their pros and cons.
+In general, you can approach (find) the OEP from two sides. Either by finding the code that is executed at a very late stage of the loader or by finding the code that is executed very early in the unpacked application. Both have their pros and cons.
 
 ![]({{site.url}}/assets/sims_2/oep.png)
 
 Approaching the OEP from the late stage of the loader is usually the better idea as you can make sure to not miss any instructions. And once you are dealing with packers that intentionally 'steal' bytes from the entry point of the app, you need to use this method.<br>
-The traditional way to find the end of the loader is to look out for WinAPI-Calls that - for example - write the (decrypted) application data (_WriteProcessMemory_), set the protection flags of the written data (_VirtualProtect_) or perform the loading of the app (_LoadLibrary_, _GetProcAddress_).
+The traditional way to find the end of the loader is to look out for WinAPI-Calls that - for example - write the (decrypted) application data (_WriteProcessMemory_), set the protection flags of the written data (_VirtualProtect_), perform the loading of the app (_LoadLibrary_, _GetProcAddress_) or do some cleanup stuff (_LocalFree_, _VirtualFree_, _HeapFree_, ...).
 
 Finding the OEP after the app has already started can be somewhat easier as some compilers integrate very specific Calls at the start of the app. For example _GetVersion_, _GetModuleHandle_ or _GetCommandLine_ are always a good candidate if you deal with targets that have been compiled with VisualStudio.
 
@@ -159,7 +159,7 @@ As expected - if you have ScyllaHide disabled for more fun - we will instantly s
 
 ![]({{site.url}}/assets/gta3/busted.png)
 
-Of course they have added a debugger check ;) The only question is, which of the many methods did they use? You can see how [Nathan](https://www.youtube.com/watch?v=jRx9WMRoKfM) figures out the used methods in his video or you can read my [GTA 2 article](/games/gta2) since the methods didn't really change since SafeDisc v1. Or - if you are lazy - you can just use ScyllaHide and untick options until you have isolated the necessary anti-anti methods.<br>
+Of course they have added a debugger check ;) The only question is, which of the many methods did they use? You can see how [Nathan](https://www.youtube.com/watch?v=jRx9WMRoKfM) figures out the used methods in his video or you can read my [GTA 2 article](/games/gta2) since the methods didn't really change since SafeDisc v1. Or - if you are lazy - you can just use ScyllaHide and (un)tick options until you have isolated the necessary anti-anti methods.<br>
 
 For SafeDisc v1-v3 three methods are used:
 
