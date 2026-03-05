@@ -21,7 +21,7 @@ If you are new to the topic, I recommed reading the articles in the following or
 
 [Hexplore](https://oldgamescracking.github.io/games/hexplore)
 
-- Somewhat in-depth article on SecurROM 1
+- Somewhat in-depth article on SecuROM 1
 - Actually quite easy
 - Some CALLs will get replaced by apphelp.dll, but CALLs are not replaced by a stub
 
@@ -98,3 +98,12 @@ If you are new to the topic, I recommed reading the articles in the following or
 - Same as Stronghold Crusader
 - Deep-Dive on how Virtualized Jumps are stored
 - Fake Nanomites
+
+# Quite Hard
+
+[The Sims 2](/games/sims_2_part_1)
+
+- Same as previous versions of SafeDisc (Nanomites etc.)
+- Code was obfuscated by replacing basic types with a Value-Class
+- Some instructions run inside a Virtual Machine
+- There is a silent check to see if SafeDisc was removed
