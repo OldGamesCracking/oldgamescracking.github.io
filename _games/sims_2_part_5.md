@@ -175,7 +175,7 @@ It works roughly in the following manner:
 - The return address of the Call in the user code is used as a lookup to retrieve a single P-Code from a list of P-Code-Descriptors. But this P-Code is not directly executed by the VM, it's rather parsed/interpreted by the static internal P-Code of the VM, hence it's more like an _'Initialization Vector'_ (IV).
 - The IVs and the original registers get mapped into the VM\_MEMORY at the given offsets/addresses. One fake-register is added that is used for immediate values, it gets filled by the VM.
 - Internally the VM has 4 working/scratch registers `a0`, `a1`, `a2`, `a3`, a `zero` register that always returns zero, a `ra` register that is used to hold the return address when a subroutine is called, an instruction pointer `pc` and a few temp-registers.
-- All in all the instructions and the registers resemble a RISC-like architecture, although it looks like a handful of modifications were made. But I must admit that it was my first time working with the RISC architecture, so I might be possible that not everything is 100% acurate.
+- All in all the instructions and the registers resemble a RISC-like architecture, although it looks like a handful of modifications were made. But I must admit that it was my first time working with the RISC architecture, so it might be possible that not everything is 100% accurate.
 
 The memory layout is as follows:
 
@@ -188,6 +188,8 @@ The extracted raw code section can be found [here]({{site.url}}/assets/sims_2/pa
 Ok, so much for the overview. Before we can start analyzing the P-Code now, we need to explore the VM in-depth. So let's get our hands dirty.
 
 # Boiling it down
+
+You are here:
 
 ![]({{site.url}}/assets/sims_2/level1.png)
 
@@ -250,7 +252,7 @@ PCode = GetPCodeFromAddress(this,call_address);
 
 Note that _ctx_vals.EIP_ is already an instance of that Value-Class I talked about earlier. _populate\_context_ transforms the 'plain' values from the stack-context to these Value-Classes. The _'get\_value'_ method retrieves back the plain value of EIP.<br>
 
-Inside _GetPCodeFromAddress_ the Call-Address is actually translated back to the return address (address + 5), then the RVA is calculated by subtracting the Image Base (0x00400000). This RVA is then transformed into a lookup value, simply by calculating the _MD5_ hash and using the first 4 bytes of that as the lookup.
+Inside _GetPCodeFromAddress_ the Call-Address (original value of EIP) is actually translated back to the return address (EIP + 5), then the RVA is calculated by subtracting the Image Base (0x00400000). This RVA is then transformed into a lookup value, simply by calculating the _MD5_ hash and using the first 4 bytes of that as the lookup.
 
 Something close to that:
 
@@ -310,7 +312,7 @@ The following Call to 0x6674E040 will fill the code section of VM\_MEMORY (0x000
 ![]({{site.url}}/assets/sims_2/init_code_section.png)<br>
 ![]({{site.url}}/assets/sims_2/dump.png)<br>
 
-Looks like the content of the code section was baked into the SafeDisc code.<br>
+Looks like the content of the code section of the VM was baked into the SafeDisc code.<br>
 
 A few lines down the raod, we finally see something useful:
 
@@ -328,7 +330,7 @@ This is what I reconstructed the function to:
 
 ![]({{site.url}}/assets/sims_2/run.png)
 
-So the three parsed values from the _PCODE\_DESCRIPTOR\_t_ (0x00000000, 0x9C5021E4, 0x71C36AC9) and all the registers (hence the context) are copied over, then the VM is reset (the internal instruction pointer is reset to zero), and finally what looks like the inner VM run-function is reached - Yay!<br>
+So the three parsed values from the _PCODE\_DESCRIPTOR\_t_ (0x00000000, 0x9C5021E4, 0x71C36AC9) and all the registers (hence the context) are copied over, then the VM is reset (the internal instruction pointer `pc` is reset to zero), and finally what looks like the inner VM run-function is reached - Yay!<br>
 
 ![]({{site.url}}/assets/sims_2/level6.png)
 
@@ -444,7 +446,8 @@ uint32_t key_IV1 = Transform(key_IV2);
 IV1 ^= key_IV1;
 ```
 
-The OpCode Reference can be found [here]({{site.url}}/assets/sims_2/opcode_reference)
+The OpCode Reference can be found [here]({{site.url}}/assets/sims_2/opcode_reference).<br>
+Note: These are the OpCodes that get derived from the _'Initialization Vectors'_ (IV). They represent the emulated instructions and should be de-virtualizeable back to x86 assembly. They are not to be confused with the internal static [Parser OpCodes]({{site.url}}/assets/sims_2/parser_opcode_reference) of the VM.
 
 # Putting it all together
 
@@ -493,6 +496,6 @@ Phew! That was one hell of an article! Trust me, we can already see the finishli
 
 ![]({{site.url}}/assets/sims_2/strange_code.png)
 
-The other thing I was <strike>afraid of</strike> excited for was the fact that the original release by _MONEY_ was broken and was therefore nuked, so there was something lurking in the shadows. But we will see this in the final article ;)
+The other thing I was <strike>afraid of</strike> excited for was the fact that the original release by _MONEY_ was broken and was therefore nuked, so there was something lurking in the shadows. But we will see this in the [final article](/games/sims_2_part_6) ;)
 
 * * *

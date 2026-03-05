@@ -76,7 +76,7 @@ From there on we can start to repair the game.<br>
 
 # Walking the code
 
-The final DLL can be found [here](https://github.com/OldGamesCracking/oldgamescracking.github.io/tree/main/assets/sims_2/dll_worker).<br>
+Spoiler: The final DLL can be found [here](https://github.com/OldGamesCracking/oldgamescracking.github.io/tree/main/assets/sims_2/dll_worker).<br>
 
 In order to find the Nanomites now, we need a better solution than just searching the text section for some random byte values of 0xCC (`INT3`), we actually want to be sure that we are really dealing with an `INT3` instruction. The only good way to do so is to fully parse the instructions, e.g. via [Zydis](https://github.com/zyantific/zydis) or [Capstone](https://github.com/capstone-engine/capstone). I opted to go with Zydis as this is what x64dbg uses and so I can get some inspiration (although I have to mention that it used Capstone up until [2017](https://x64dbg.com/blog/2017/10/18/goodbye-capstone-hello-zydis.html)).<br>
 

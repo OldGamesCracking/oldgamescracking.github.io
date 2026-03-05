@@ -71,19 +71,19 @@ And finally we get to the third group of Nanomites which get restored to the cod
 
 ![]({{site.url}}/assets/sims_2/strange_code.png)
 
-Intrestingly, if you have a look at the preceeding function which looks quite similar, you can already guess which bytes are actually missing:
+Intrestingly, if you have a look at the preceeding function which looks quite similar, you can already guess which bytes we should actually put there:
 
 ![]({{site.url}}/assets/sims_2/jmp.png)
 
-But guessing is not what we want. So I started to investigate the cause. At some point I realized that for whatever reasons - probably to fool us poor crackers - in this particular case, the data that normally holds information on how to restore a Nanomite now actually holds data to emulate the instruction instead. But since we patched the SafeDisc code in [Part III](/games/sims_2_part_3) to always write the Nanomite back, we end up forcingly writing 2 bytes of the instruction data.<br>
+But guessing is not what we want :) So I started to investigate the cause. At some point I realized that for whatever reasons - probably to fool us poor crackers - in this particular case, the data that normally holds information on how to restore a Nanomite now actually holds data to emulate the instruction instead (Via the VM). But since we patched the SafeDisc code in [Part III](/games/sims_2_part_3) to always write the Nanomite back, we end up forcingly writing 2 bytes of the VM instruction data.<br>
 
 The solution I came up with to deal with the situation is a bit hacky, but it get's the job done. This is how I do it:
 
 - I hook a place in the SafeDisc code where I can read the unencrypted Nanomite data and copy it to a buffer every time the hook triggers (_Callback\_Nanomites_).
 - The signal to let me know when there is an emulated instruction instead of a Nanomite is when SafeDisc calls _ReadProcessMemory_ two times in a row (_Callback\_ReadProcessMemory_).
-- I then interpret the Nanomite data as an IV (see [Part V](/games/sims_2_part_3)), de-virtualize the instruction and ignore the next _WriteProcessDataEx_.
+- I then interpret the Nanomite data as an IV (see [Part V](/games/sims_2_part_3)), de-virtualize the instruction and ignore the next _WriteProcessMemoryEx_.
 
-The underlying struct in which the Nanomite data is stored did not change much since previous versions of SafeDisc, so I could identify it easily. It can hold up to 8 bytes, but since we need 12 bytes for the IV, the IV1 part was hardcoded to be always zero. The recovered IV is (0x00000000, 0x9CA0618D, 0x71C760C9) which results in an OpCode of 4 (`JNE`/`JNZ`), operandA is 10 (_EIP_) and operandB is 8 (_IMM_) and the Immediate value is 6. So a 'JNE +6' - exactly as we expected ;)
+The underlying struct in which the Nanomite data is stored did not change much since previous versions of SafeDisc, so I could identify it easily. It can hold up to 8 bytes, but since we need 12 bytes for the IV, the IV0 part was hardcoded to be always zero. The recovered IV is (0x00000000, 0x9CA0618D, 0x71C760C9) which results in an OpCode of 4 (`JNE`/`JNZ`), operandA is 10 (_EIP_) and operandB is 8 (_IMM_) and the Immediate value is 6. So a 'JNE +6' - exactly as we expected ;)
 
 # The final chapter
 
@@ -98,7 +98,7 @@ First, let's try to understand the situation. We can start the game, load a fami
 ![]({{site.url}}/assets/sims_2/build_menu.jpg)
 
 Now comes the tricky part: How do you solve this? If you are unlucky, the logic is buried deep inside the game and since there is no error-message, we have nothing to track down. If nothing would help, we would need to reverse-engineer the game logic to see where things go south - uncool!<br>
-The solution is surprisingly simple :) Initially I thought that the game would either check if it was altered by e.g. checking if the Nanomites or Calls to the VM were still intact or it had somehow detected the presence of our DLL and then silently swapped one of the reconstructed instructions. In order to get a feeling for where I had to look, I exported a list of all the locations where we fixed the game (Nanomites, Emulated Instructions, Calls, ...) and imported them in x32dbg to place a breakpoint on every location. After checking and silencing most of the breakpoints I eventually figured out that two breakpoint triggered every time I opened the build menu and they were in a rather short function starting at 0x004BAC9C:
+The solution is surprisingly simple :) Initially I thought that the game would either check if it was altered by e.g. checking if the Nanomites or Calls to the VM were still intact. Alternatively it had somehow detected the presence of our DLL and then silently swapped one of the reconstructed instructions. In order to get a feeling for where I had to look, I exported a list of all the locations where we fixed the game (Nanomites, Emulated Instructions, Calls, ...) and imported them in x32dbg to place a breakpoint on every location. After checking and silencing most of the breakpoints I eventually figured out that two breakpoint triggered every time I opened the build menu that were located in a rather short function starting at 0x004BAC9C:
 
 ![]({{site.url}}/assets/sims_2/breakpoints.png)
 

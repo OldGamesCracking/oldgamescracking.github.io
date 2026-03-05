@@ -16,7 +16,7 @@ tags:
 
 # OpCodes
 
-Note: These are the OpCodes that get derived from the _'Initialization Vectors'_ (IV). They represent the emulated instructions and should be de-virtualizeable back to x86 assembly. They are not to be confused with the internal static [Parser OpCodes]({{site.url}}/assets/sims_2/parser_opcode_reference) of the VM.  
+Note: These are the OpCodes that get derived from the _'Initialization Vectors'_ (IV). They represent the emulated instructions and should be de-virtualizeable back to x86 assembly. They are not to be confused with the internal static [Parser OpCodes]({{site.url}}/assets/sims_2/parser_opcode_reference) of the VM.
 
 | OpCode 0 | Register Transfer |
 | ------------- | ------------- |
@@ -56,7 +56,7 @@ JMP <offset>
 | Equivalent x86 Instruction | CALL |
 
 Like JMP, this adds the second operand to the first, so it could be an _ADD_ instruction, but the flags are not updated. So it only makes sense to use this with _EIP_ as first parameter.
-Note that no return address needs to be pushed onto the stack since it is already on the stack by calling the VM-Entry, ESP just needs to be decremented by 4 so the return address will not get popped of in the cleanup routine.
+Note that no return address needs to be pushed onto the stack since it is already on the stack by calling the VM-Entry, ESP just needs to be decremented by 4 so the return address will not get popped off in the cleanup routine.
 
 ```
 REG[ESP] -= 4
