@@ -129,7 +129,7 @@ So I placed a hardware breakpoint on the address of the first call (0x503280) to
 
 ![]({{site.url}}/assets/stealth_combat/loop.png)
 
-This code goes through a list that contains two values per entry. The first value is the Virtual Address of the return address - hence, subtracting 4 from that gives the address of the call. The second value is the original thunk address. Something like that:
+This code goes through a list that contains two values per entry. The first value is the Virtual Address of the return address - hence, subtracting 5 from that gives the address of the call. The second value is the original thunk address. Something like that:
 
 ```c
 struct Call
@@ -169,7 +169,7 @@ Have a look at the list:
 
 ![]({{site.url}}/assets/stealth_combat/msb.png)
 
-Some of the entries have a thunk-address that unusually high. If you have a closer look at the Laserlock-stub, you realize that the MSB is actually a flag that will be masked out later (AND 0x7fffffff). This flag indicates that a _"JMP [address]"_ (FF 25) shall be perfomed instead of a _"CALL [address]"_ (FF 15).
+Some of the entries have a thunk-address that is unusually high. If you have a closer look at the Laserlock-stub, you realize that the MSB is actually a flag that will be masked out later (AND 0x7fffffff). This flag indicates that a _"JMP [address]"_ (FF 25) shall be perfomed instead of a _"CALL [address]"_ (FF 15).
 
 The script I used to reconstruct the imports can be found [here]({{site.url}}/assets/stealth_combat/imports_fixer.txt).
 
