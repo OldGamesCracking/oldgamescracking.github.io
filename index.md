@@ -36,3 +36,6 @@ layout: default
 - [The Sims 2 - Part V (VM)](/games/sims_2_part_5)
 - [The Sims 2 - Part VI (Silent Checks)](/games/sims_2_part_6)
 - [Tomb Raider III (CD Lock)](/games/tomb_raider_3)
+- [Colin McRae Rally (DiscGuard v1.0.0.117)](/games/colin_mcrae_rally)
+
+***

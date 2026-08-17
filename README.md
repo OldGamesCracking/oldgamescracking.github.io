@@ -55,6 +55,10 @@ If you are new to the topic, I recommed reading the articles in the following or
 - Messed up program flow via exceptions
 - Easily repairable imports
 
+[Colin McRae Rally](https://oldgamescracking.github.io/games/colin_mcrae_rally)
+
+- Kinda simple, but needs a Win98 VM
+
 # Medium
 
 [Zoo Tycoon 2](https://oldgamescracking.github.io/games/zoo_tycoon_2)
