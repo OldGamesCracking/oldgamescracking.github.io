@@ -15,7 +15,7 @@ tags:
 | Name | Colin McRae Rally |
 | ------------- | ------------- |
 | Release-Date | 10/1998 |
-| Redump ID | [31914](http://redump.org/disc/31914/) |
+| Redump ID | [31914](http://redump.info/disc/31914/) |
 | Protection | DiscGuard v1.0.0.117 |
 | Cracked under | Win 98 |
 | Tested under | Win 10 |
