@@ -17,7 +17,7 @@ tags:
 | Name | Grand Theft Auto: Vice City |
 | ------------- | ------------- |
 | Release-Date | 05/2003 |
-| Redump ID | [19050](http://redump.org/disc/19050/) & [10500](http://redump.org/disc/10500/) |
+| Redump ID | [19050](http://redump.info/disc/19050/) & [10500](http://redump.info/disc/10500/) |
 | Protection | SecuROM v4.84.69 |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |

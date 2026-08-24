@@ -16,7 +16,7 @@ tags:
 | Name | Stronghold Deluxe |
 | ------------- | ------------- |
 | Release-Date | 06/2002 |
-| Redump ID | [44042](http://redump.org/disc/44042/) |
+| Redump ID | [44042](http://redump.info/disc/44042/) |
 | Protection | SafeDisc v2.60.010 |
 | Cracked under | Win XP |
 | Tested under | Win XP & Win 10 |

@@ -16,7 +16,7 @@ tags:
 | Name | 4x4 Evo |
 | ------------- | ------------- |
 | Release-Date | 10/2001 |
-| Redump ID | [48359](http://redump.org/disc/48359/) |
+| Redump ID | [48359](http://redump.info/disc/48359/) |
 | Protection | CopyLok / CodeLok v2.20 |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |

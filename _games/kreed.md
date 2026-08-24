@@ -15,7 +15,7 @@ tags:
 | Name | Kreed |
 | ------------- | ------------- |
 | Release-Date | 08/2003 |
-| Redump ID | [52635](http://redump.org/disc/52635/) |
+| Redump ID | [52635](http://redump.info/disc/52635/) |
 | Protection | 3PLock |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |

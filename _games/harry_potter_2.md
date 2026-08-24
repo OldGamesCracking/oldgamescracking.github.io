@@ -18,7 +18,7 @@ tags:
 | Name | Harry Potter and the Chamber of Secrets |
 | ------------- | ------------- |
 | Release-Date | 11/2002 |
-| Redump ID | [66498](http://redump.org/disc/66498/) |
+| Redump ID | [66498](http://redump.info/disc/66498/) |
 | Protection | SafeDisc v2.80.010 |
 | Cracked under | Win XP |
 | Tested under | Win XP & Win 10 |

@@ -16,7 +16,7 @@ tags:
 | Name | Die Siedler IV |
 | ------------- | ------------- |
 | Release-Date | 02/2001 |
-| Redump ID | [48590](http://redump.org/disc/48590/) |
+| Redump ID | [48590](http://redump.info/disc/48590/) |
 | Protection | SafeDisc v2.10.030 + ??? |
 | Cracked under | Win XP + Win 10 |
 | Tested under | Win 10 |

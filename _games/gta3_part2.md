@@ -16,7 +16,7 @@ tags:
 | Name | Grand Theft Auto 3 |
 | ------------- | ------------- |
 | Release-Date | 05/2002 |
-| Redump ID | [9700](http://redump.org/disc/9700/) |
+| Redump ID | [9700](http://redump.info/disc/9700/) |
 | Protection | SafeDisc v2.51.021 + CD-Checks |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |

@@ -19,7 +19,7 @@ tags:
 | Name | The Sims 2 |
 | ------------- | ------------- |
 | Release-Date | 9/2004 |
-| Redump ID | [49162](http://redump.org/disc/49162/) |
+| Redump ID | [49162](http://redump.info/disc/49162/) |
 | Protection | SafeDisc v3.20.020 |
 | Cracked under | Win XP |
 | Tested under | Win XP & Win 10 |

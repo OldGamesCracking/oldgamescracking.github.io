@@ -15,7 +15,7 @@ tags:
 | Name | RollerCoaster Tycoon 2 |
 | ------------- | ------------- |
 | Release-Date | 10/2002 |
-| Redump ID | [35619](http://redump.org/disc/35619/) |
+| Redump ID | [35619](http://redump.info/disc/35619/) |
 | Protection | SecuROM v4.83.11 |
 | Cracked under | Win XP |
 | Tested under | Win 10 |

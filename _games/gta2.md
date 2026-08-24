@@ -16,7 +16,7 @@ tags:
 | Name | Grand Theft Auto 2 |
 | ------------- | ------------- |
 | Release-Date | 1997 |
-| Redump ID | [31547](http://redump.org/disc/31547/) |
+| Redump ID | [31547](http://redump.info/disc/31547/) |
 | Protection | SafeDisc v1.30.010 + CD-Checks + Integrity Checks |
 | Cracked under | Win XP + Win 10 |
 | Tested under | Win 10 |

@@ -15,7 +15,7 @@ tags:
 | Name | Stronghold |
 | ------------- | ------------- |
 | Release-Date | 10/2001 |
-| Redump ID | [52624](http://redump.org/disc/52624/) |
+| Redump ID | [52624](http://redump.info/disc/52624/) |
 | Protection | SafeDisc v2.40.010 |
 | Cracked under | Win XP |
 | Tested under | Win XP |

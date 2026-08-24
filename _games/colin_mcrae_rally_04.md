@@ -15,7 +15,7 @@ tags:
 | Name | Colin McRae Rally 04 |
 | ------------- | ------------- |
 | Release-Date | 04/2004 |
-| Redump ID | [37749](http://redump.org/disc/37749/) |
+| Redump ID | [37749](http://redump.info/disc/37749/) |
 | Protection | SecuROM v5.03.04 |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |

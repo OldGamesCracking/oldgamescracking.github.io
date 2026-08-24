@@ -16,7 +16,7 @@ tags:
 | Name | MotoGP 2 |
 | ------------- | ------------- |
 | Release-Date | 06/2003 |
-| Redump ID | [35480](http://redump.org/disc/35480/) |
+| Redump ID | [35480](http://redump.info/disc/35480/) |
 | Protection | Bitpool |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |

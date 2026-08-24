@@ -16,7 +16,7 @@ tags:
 | Name | Robin Hood |
 | ------------- | ------------- |
 | Release-Date | 09/2002 |
-| Redump ID | [71268](http://redump.org/disc/71268/) |
+| Redump ID | [71268](http://redump.info/disc/71268/) |
 | Protection | Sysiphus 1.5 |
 | Cracked under | Win XP |
 | Tested under | WinXP & Win 10 |

@@ -17,7 +17,7 @@ tags:
 | Name | Die Sims |
 | ------------- | ------------- |
 | Release-Date | 1997 |
-| Redump ID | [48103](http://redump.org/disc/48103/) |
+| Redump ID | [48103](http://redump.info/disc/48103/) |
 | Protection | SafeDisc 1.40.004 |
 | Cracked under | Win XP + Win 10 |
 | Tested under | Win 10 |

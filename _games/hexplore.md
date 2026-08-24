@@ -15,7 +15,7 @@ tags:
 | Name | Hexplore |
 | ------------- | ------------- |
 | Release-Date | 1998 |
-| Redump ID | [35457](http://redump.org/disc/35457/) |
+| Redump ID | [35457](http://redump.info/disc/35457/) |
 | Protection | SecuROM (Version unknown, probably v1) |
 | Tested under | Win 10 |
 | Scene-Crack by | Laxity |

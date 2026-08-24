@@ -16,7 +16,7 @@ tags:
 | Name | Stealth Combat |
 | ------------- | ------------- |
 | Release-Date | 02/2002 |
-| Redump ID | [128068](http://redump.org/disc/128068/) |
+| Redump ID | [128068](http://redump.info/disc/128068/) |
 | Protection | Laserlock v5 (Build 12.02.02) |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |

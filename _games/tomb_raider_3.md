@@ -15,7 +15,7 @@ tags:
 | Name | Tomb Raider III: Adventures of Lara Croft  |
 | ------------- | ------------- |
 | Release-Date | 11/1998 |
-| Redump ID | [34982](http://redump.org/disc/34982/) |
+| Redump ID | [34982](http://redump.info/disc/34982/) |
 | Protection | CD Lock |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |

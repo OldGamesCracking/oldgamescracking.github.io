@@ -15,7 +15,7 @@ tags:
 | Name | Zoo Tycoon 2 |
 | ------------- | ------------- |
 | Release-Date | 11/2004 |
-| Redump ID | [121332](http://redump.org/disc/121332/) |
+| Redump ID | [121332](http://redump.info/disc/121332/) |
 | Protection | SmartE |
 | Cracked under | Win 10 |
 | Tested under | Win 10 |

@@ -18,7 +18,7 @@ tags:
 | Name | Stronghold Crusader |
 | ------------- | ------------- |
 | Release-Date | 09/2002 |
-| Redump ID | [52616](http://redump.org/disc/52616/) |
+| Redump ID | [52616](http://redump.info/disc/52616/) |
 | Protection | SafeDisc v2.70.030 |
 | Cracked under | Win XP |
 | Tested under | Win XP & Win 10 |

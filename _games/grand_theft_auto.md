@@ -14,7 +14,7 @@ tags:
 | Name | Grand Theft Auto |
 | ------------- | ------------- |
 | Release-Date | 1997 |
-| Redump ID | [31971](http://redump.org/disc/31971/) |
+| Redump ID | [31971](http://redump.info/disc/31971/) |
 | Protection | CD-Check |
 | Tested under | Win 10 |
 | Scene-Crack by | [Acetate](https://archive.org/details/gta1_cdcrack) |
