@@ -2,16 +2,13 @@
 #include <stdio.h>
 
 
-LPCSTR dll = "dll_game.dll";
-
-
 int main(int argc, char** argv)
 {
 	printf("Injector started\n");
 
-	if (argc != 2)
+	if (argc != 3)
 	{
-		printf("Usage: simple_injector.exe <game.exe>\n");
+		printf("Usage: simple_injector.exe <game.exe> <injected.dll>\n");
 
 		ExitProcess(-1);
 	}
@@ -75,7 +72,7 @@ int main(int argc, char** argv)
 
 	printf("Writing DLL path to process\n");
 
-	if (!WriteProcessMemory(pi.hProcess, (LPVOID)nameBuffer, dll, strlen(dll) + 1, NULL))
+	if (!WriteProcessMemory(pi.hProcess, (LPVOID)nameBuffer, argv[2], strlen(argv[2]) + 1, NULL))
 	{
 		VirtualFreeEx(pi.hProcess, (LPVOID)nameBuffer, 0, MEM_RELEASE);
 		CloseHandle(pi.hThread);
