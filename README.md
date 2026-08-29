@@ -73,6 +73,12 @@ If you are new to the topic, I recommed reading the articles in the following or
 - OEP easily findable
 - Imports are - in theory - easy to reconstruct, but they need to be reconstructed in a non-linear fashion (randomly, alternating, ...)
 
+[Sacred](/games/sacred)
+
+- A few tricks to annoy us
+- All imports are copied to temp buffers
+- A not so easy to find custom protection
+
 [GTA: Vice City](https://oldgamescracking.github.io/games/gta_vice_city) / [Colin McRae Rally 04](https://oldgamescracking.github.io/games/colin_mcrae_rally_04)
 
 - Pretty much the same as RollerCoaster Tycoon 2
