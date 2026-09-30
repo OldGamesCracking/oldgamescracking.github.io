@@ -79,10 +79,15 @@ If you are new to the topic, I recommed reading the articles in the following or
 - All imports are copied to temp buffers
 - A not so easy to find custom protection
 
-[GTA: Vice City](https://oldgamescracking.github.io/games/gta_vice_city) / [Colin McRae Rally 04](https://oldgamescracking.github.io/games/colin_mcrae_rally_04)
+[Colin McRae Rally 04](https://oldgamescracking.github.io/games/colin_mcrae_rally_04)
 
 - Pretty much the same as RollerCoaster Tycoon 2
 - A special patch for Scylla is needed
+
+[GTA: Vice City](https://oldgamescracking.github.io/games/gta_vice_city)
+
+- Same as Colin McRae Rally 04
+- Turns out there are silent checks during the game that will have all sorts of [side effects](https://www.youtube.com/watch?v=gqUmXuDIDbc) when the game is cracked improperly
 
 [GTA 3](https://oldgamescracking.github.io/games/gta3)
 

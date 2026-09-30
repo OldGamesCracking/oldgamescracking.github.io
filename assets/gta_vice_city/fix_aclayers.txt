@@ -1,0 +1,4 @@
+mov dword:[0x006F23D0], ddraw.DirectDrawCreateEx
+mov dword:[0x006F2484], kernel32.LoadLibraryA
+mov dword:[0x006F2520], user32.DestroyWindow
+mov dword:[0x006F25A4], d3d8.Direct3DCreate8

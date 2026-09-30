@@ -1,0 +1,175 @@
+; Import Fixer for GTA Vice City (SecuROM v4.84.69)
+; Note: This will only restore the non-special imports. The special ones will be exported to "special_calls.bin"
+
+; Make sure to be at the OEP
+$iat_start = 0x006F23C0
+$iat_size = 0x2E0
+$iat_end = $iat_start + $iat_size
+
+bpd
+bphwd
+
+$eip_org = eip
+$esp_org = esp
+
+; Allocate a buffer for the special calls (return_address:proc)
+alloc 0x1000
+$call_lookup = $RESULT
+log "Call Lookup at {p:$call_lookup}"
+$call_lookup_idx = 0
+
+; Find first relative call, this is used as the SecuROM stub
+find $eip_org, FF15????????
+$stub_addr = dword:[$RESULT + 2]
+; Should give: 0x00A48EC0
+log "Stub Address: {p:$stub_addr}"
+$stub_location = dword:[$stub_addr]
+; Should give: 0x00A19A00
+log "Stub Location: {p:$stub_location}"
+
+; SecuROM knows where the first and the last call is, so we can use that
+; MOV EDX, [FirstCallAddress]
+; SUB EDX, 4
+; CMP [EBP-XX], EDX
+; JB ???
+; MOV EAX, [LastCallAddress]
+; SUB EAX, 4
+find $stub_location, 8B15????????83EA043955??72??A1????????83C004
+$first_rtn = dword:[$RESULT + 0x2]
+$first_rtn = dword:[$first_rtn]
+$first_call = $first_rtn - 2	// -2 since it points to the address-part of the call
+log "First Call at: {p:$first_call}"
+$last_rtn = dword:[$RESULT + 0xf]
+$last_rtn = dword:[$last_rtn]
+$last_call = $last_rtn - 2
+log "Last Call at: {p:$last_call}"
+
+; When the SecuROM stub calls this function, we know it's a special call
+; MOV EAX, [EBP-XX]
+; PUSH EAX
+; MOV EBX, [EBP-XX]
+; PUSH EBX
+; MOV ECX, [EBP-XX]
+; PUSH ECX
+; CALL ????
+find $stub_location, 8B45??508B4D??518D55??52E8????????
+$special_call = $RESULT
+bphws $special_call, x
+
+; The stub should always exit via a JMP EAX
+findasm "JMP EAX", $stub_location
+$stub_exit = ref.addr(0)
+$fake_check = $stub_exit - $stub_location
+cmp $fake_check, 0x100
+ja found_real_exit
+; The is a fake "JMP EAX", use the next one
+$stub_exit = ref.addr(1)
+
+found_real_exit:
+log "Stub Exit at: {p:$stub_exit}"
+bphws $stub_exit, x
+SetHardwareBreakpointSilent $stub_exit
+
+; Now find all Calls to the stub...
+$stub_addr_bswap = bswap($stub_addr)
+findall $first_call, "FF15{p:$stub_addr_bswap}", ($first_last + 6 - $first_call)
+$num_calls = $RESULT
+log "{d:$num_calls} Calls found"
+
+; ...and loop through them
+$normal_calls = 0
+$special_calls = 0
+$i = 0
+
+$even = 0
+$odd = $num_calls - 1
+
+loop:
+	cmp $i, $num_calls
+	jae done
+	
+	cmp $even, $odd
+	ja done
+	
+	; Simple trick to not trigger the "in order" check
+	test $i, 1
+	jne is_odd_call
+	$call_at = ref.addr($even)
+	$even += 1
+	jmp is_even_call
+
+is_odd_call:
+	$call_at = ref.addr($odd)
+	$odd -= 1
+	
+is_even_call:
+
+	$return_address = $call_at + 6
+	
+	$is_special = 0
+	
+	; Perform a fake call
+	push $return_address
+	eip = $stub_location
+
+trap_flag:
+	erun
+	
+	; The first run sometimes stoppes immedeately (trap flag?)
+	cmp eip, $stub_location + dis.len($stub_location)
+	je trap_flag
+
+	; We are now either at the stub exit or it's a special call
+	cmp eip, $special_call
+	jne check_stub_exit
+	$special_calls += 1
+	log "Call at {p:$call_at} is special (Special call #{d:$special_calls})"
+	$is_special = 1
+	erun
+	
+check_stub_exit:
+	cmp eip, $stub_exit
+	jne error
+	$proc_address = eax
+	log "Original proc address: {p:$proc_address}"
+
+	; Get IAT enry
+	$thunk_check = $iat_start
+find_used_thunk:
+    cmp $thunk_check, $iat_end
+    je error
+    cmp dword:[$thunk_check], $proc_address
+    je thunk_found
+    $thunk_check += 4
+    jmp find_used_thunk
+
+thunk_found:
+
+	cmp $is_special, 1
+	jne not_special
+	dword:[$call_lookup + 8*$call_lookup_idx] = $return_address
+	dword:[$call_lookup + 8*$call_lookup_idx + 4] = $thunk_check
+	$call_lookup_idx += 1
+	jmp no_fix
+
+not_special:
+    dword:[$call_at + 2] = $thunk_check
+	$normal_calls += 1
+    log "Call at {p:$call_at} -> {p:$proc_address} (Normal call #{d:$normal_calls})"
+
+no_fix:
+	; Restore register
+	esp = $esp_org
+    eip = $eip_org
+
+	$i += 1
+	jmp loop
+
+error:
+	error "Something went wrong"
+
+done:
+	bphwd
+	savedata "special_calls.bin", $call_lookup, 8*$call_lookup_idx
+	free $call_lookup
+	log "Done ;)"

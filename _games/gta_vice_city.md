@@ -118,4 +118,8 @@ Or in other words:
 
 That was kinda easy. Much easier than GTA 3 ;)<br><br>
 
+## Or is it? ...
+
+Turns out we aren't even close to a proper crack yet, we'll continue in the [revisited article](/games/gta_vice_city_revisited)
+
 * * *

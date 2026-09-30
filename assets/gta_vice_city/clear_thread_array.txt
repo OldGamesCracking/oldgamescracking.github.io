@@ -1,0 +1,16 @@
+$thread_id_array = 0xAC1040
+$thread_return_addresses = 0xABCE80
+$len = 0x40
+
+$i = 0
+
+loop:
+	dword:[$thread_id_array + 4 * $i] = 0
+	dword:[$thread_return_addresses + 4 * $i] = 0
+	
+	$i += 1
+	cmp $i, 0x40
+	je end
+	jmp loop
+
+end:

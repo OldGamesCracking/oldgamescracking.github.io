@@ -23,6 +23,7 @@ layout: default
 - [Zoo Tycoon 2 (SmartE)](/games/zoo_tycoon_2)
 - [RollerCoaster Tycoon 2 (SecuROM v4.83.11)](/games/rollercoaster_tycoon_2)
 - [GTA: Vice City (SecuROM v4.84.69)](/games/gta_vice_city)
+- [GTA: Vice City - Revisited (Silent Checks)](/games/gta_vice_city_revisited)
 - [Colin McRae Rally 04 (SecuROM v5.03.04)](/games/colin_mcrae_rally_04)
 - [Stronghold Crusader (SafeDisc v2.70)](/games/stronghold_crusader)
 - [Harry Potter and the Chamber of Secrets (SafeDisc v2.80)](/games/harry_potter_2)
