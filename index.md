@@ -39,5 +39,6 @@ layout: default
 - [Tomb Raider III (CD Lock)](/games/tomb_raider_3)
 - [Colin McRae Rally (DiscGuard v1.0.0.117)](/games/colin_mcrae_rally)
 - [Sacred (ProtectCD 5.9.5.996)](/games/sacred)
+- [GTA: San Andreas (SecuROM v7.01.0003)](/games/gta_san_andreas)
 
 ***

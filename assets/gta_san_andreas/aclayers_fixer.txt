@@ -1,0 +1,3 @@
+dword:[0x00858070] = LoadLibraryA
+dword:[0x00858144] = GetVersionExA
+dword:[0x008581A4] = VirtualAlloc

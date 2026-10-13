@@ -127,3 +127,10 @@ If you are new to the topic, I recommed reading the articles in the following or
 - Code was obfuscated by replacing basic types with a Value-Class
 - Some instructions run inside a Virtual Machine
 - There is a silent check to see if SafeDisc was removed
+
+[GTA: San Andreas](https://oldgamescracking.github.io/games/gta_san_andreas)
+
+- Although it's not as hard as the Sims 2, it still needs some work
+- It uses a VM to perform some imports and to decrypt some functions
+- A bit of Code-Splicing (Jump-Bridge)
+- An AST-Interpreter (dubbed *'Recursive VM'*) is used to obfuscate constant values

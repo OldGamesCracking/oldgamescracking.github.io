@@ -1,0 +1,62 @@
+$eip_org = eip
+$esp_org = esp
+
+
+findmemall mod.base(eip), "FF15??????", mod.size(eip)
+$num_calls = ref.count()
+
+$call_idx = 0
+
+loop:
+
+	cmp $call_idx, $num_calls
+	je end
+
+	$call_at = ref.addr($call_idx)
+	$call_by = dword:[$call_at + 2]
+	
+	cmp mem.valid($call_by), 1
+	jne next
+	
+	$destination = dword:[$call_by]
+	
+	cmp mem.valid($destination), 1
+	jne next
+	
+	$mem_base = mem.base($destination)
+	
+	cmp $mem_base, $destination
+	jne next
+	
+	log "Call at {p:$call_at}"
+	log "Call by {p:$call_by}"
+	log "Destination {p:$destination}"
+	
+	eip = $destination
+
+find_func:
+	cmp dis.isbranch(eip), 1
+	je jump_found
+	sti
+	jmp find_func
+
+jump_found:
+	sti
+	$real_destination = eip
+	
+	log "Real Destination {p:$real_destination}"
+	
+	; Install a normal call
+	$call_offset = $real_destination - $call_at - 5 - 1
+	
+	word:[$call_at] = 0xE890
+	dword:[$call_at + 2] = $call_offset
+	
+	eip = $eip_org
+	esp = $esp_org
+
+next:	
+	$call_idx += 1
+	jmp loop
+	
+end:

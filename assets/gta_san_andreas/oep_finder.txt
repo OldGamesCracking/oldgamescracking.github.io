@@ -1,0 +1,45 @@
+; SecuROM 7 OEP Finder
+; Tested with:
+;	- GTA San Andreas
+;
+; Make sure to start at the entry point, pass all exceptions!
+
+; Disable Breakpoints
+bpd
+bphwd
+bpmd
+
+$addr_text_section = mod.main() + mem.size(mod.main())
+
+; Kill Anti-Debugging
+$peb_addr = peb()
+byte:[$peb_addr + 2] = 0
+
+$addr_VirtualProtect = kernelbase.VirtualProtect
+
+bp $addr_VirtualProtect
+
+SetBreakpointSilent $addr_VirtualProtect
+
+bpcond $addr_VirtualProtect, arg.get(0) == $addr_text_section && arg.get(2) == 0x20
+
+loop:
+	erun
+
+	cmp eip, $addr_VirtualProtect
+	jne loop
+	log "[VirtualProtect]: {p:arg.get(0)} | {p:arg.get(1)} | {p:arg.get(2)} @ {p:dword:[esp]}"
+	cmp arg.get(0), $addr_text_section
+	jne loop
+	cmp arg.get(2), 0x20
+	jne loop
+
+bpc $addr_VirtualProtect
+rtr
+sti
+bpm $addr_text_section, x
+erun
+
+cmt eip, "<-- OEP"
+
+end:
